@@ -44,23 +44,25 @@ export function Sheet({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative w-full max-w-lg rounded-t-3xl bg-surface p-5 pb-8 shadow-pop animate-rise sm:rounded-3xl sm:pb-5 pb-safe",
+          "relative flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-3xl bg-surface p-5 pb-8 shadow-pop animate-rise sm:max-h-[88dvh] sm:rounded-3xl sm:pb-7",
           className
         )}
         style={{ animationDuration: "0.24s" }}
       >
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border-strong sm:hidden" />
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-ink">{title}</h2>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-cream-deep"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        <div className="shrink-0">
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border-strong sm:hidden" />
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-ink">{title}</h2>
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-cream-deep"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-        {children}
+        <div className="min-h-0 overflow-y-auto">{children}</div>
       </div>
     </div>,
     document.body
