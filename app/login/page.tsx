@@ -80,7 +80,14 @@ export default function LoginPage() {
       options: { redirectTo: `${getOrigin()}/auth/callback` },
     });
     if (error) {
-      setError("Google sign-in isn't configured yet.");
+      // On success the browser redirects to Google, so we only reach here on
+      // failure. Surface the real message (e.g. provider disabled, redirect
+      // URI mismatch) instead of hiding it behind a generic string.
+      setError(
+        /provider is not enabled/i.test(error.message)
+          ? "Google sign-in isn't enabled in Supabase yet."
+          : error.message
+      );
       setPending(null);
     }
   }
