@@ -262,8 +262,11 @@ begin
     select user_id into parent_owner from commits where id = new.parent_commit_id;
     perform notify(parent_owner, new.user_id, new.parent_commit_id, 'join');
   end if;
-  -- @mentions written into the commit's context note.
-  perform notify_mentions(new.context, new.user_id, new.id);
+  -- @mentions written into the commitment or its context note.
+  perform notify_mentions(
+    coalesce(new.text, '') || ' ' || coalesce(new.context, ''),
+    new.user_id, new.id
+  );
   return new;
 end $$;
 

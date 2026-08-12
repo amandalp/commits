@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Plus, Check, ImagePlus, Loader2, Users, X } from "lucide-react";
 import {
@@ -10,6 +10,7 @@ import {
   toLocalInput,
 } from "./DeadlineField";
 import { MediaStrip } from "./MediaStrip";
+import { MentionTextarea } from "./MentionTextarea";
 import { AddPeopleSheet } from "./AddPeopleSheet";
 import { Avatar } from "./Avatar";
 import { Button } from "./ui";
@@ -55,19 +56,6 @@ export function CreateCommitForm() {
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const areaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    areaRef.current?.focus();
-  }, []);
-
-  // Auto-grow the commitment textarea.
-  useEffect(() => {
-    const el = areaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, [text]);
 
   // Convenience only: if someone tacks a deadline onto the sentence
   // ("… by Friday at noon"), lift it out into the date. Runs on blur so it
@@ -173,10 +161,12 @@ export function CreateCommitForm() {
         <label className={cn("mb-2 block text-[14px] font-medium text-muted", hand && "ink-hand text-[17px] text-ink-soft")}>
           I want to
         </label>
-        <textarea
-          ref={areaRef}
+        <MentionTextarea
+          autoGrow
+          autoFocus
           value={text}
-          onChange={(e) => setText(e.target.value.slice(0, 280))}
+          onValueChange={setText}
+          maxLength={280}
           onBlur={absorbNaturalLanguage}
           placeholder="launch the first version of Commits"
           rows={2}
@@ -205,9 +195,10 @@ export function CreateCommitForm() {
               >
                 {hand ? "a little context" : "A little context"}
               </label>
-              <textarea
+              <MentionTextarea
                 value={context}
-                onChange={(e) => setContext(e.target.value.slice(0, 600))}
+                onValueChange={setContext}
+                maxLength={600}
                 placeholder="Why does this matter to you?"
                 rows={2}
                 autoFocus
@@ -335,7 +326,7 @@ export function CreateCommitForm() {
       >
         {!pending && <Sparkles className="h-[18px] w-[18px]" />}
         <span className={cn(hand && "ink-hand text-[19px]")}>
-          {hand ? "put it on the record" : "Commit"}
+          {hand ? "commit in public" : "Commit in public"}
         </span>
       </Button>
     </div>
