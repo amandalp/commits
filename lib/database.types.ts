@@ -11,7 +11,9 @@ export type NotificationType =
   | "deadline"
   | "shipped"
   | "update"
-  | "not_yet";
+  | "not_yet"
+  | "loop_in"
+  | "mention";
 
 type Timestamps = { created_at: string };
 
@@ -103,6 +105,9 @@ export type Database = {
       >;
       watches: Table<
         { id: string; user_id: string; commit_id: string } & Timestamps
+      >;
+      loop_ins: Table<
+        { id: string; commit_id: string; user_id: string } & Timestamps
       >;
       comments: Table<
         CommentRow,

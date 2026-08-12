@@ -7,7 +7,6 @@ import { CommitStructure } from "./CommitStructure";
 import { CommitActions } from "./CommitActions";
 import { StatusBadge } from "./ui";
 import { ShipProof } from "./ShipProof";
-import { ShareButton } from "./ShareButton";
 import { timeAgo, deadlineLabel, countdown } from "@/lib/utils";
 import type { CommitView } from "@/lib/types";
 
@@ -150,9 +149,8 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
           />
         )}
 
-        <div className="mt-3.5 flex items-center gap-0.5">
+        <div className="mt-3.5">
           <CommitActions commit={commit} />
-          <ShareButton commit={commit} />
         </div>
       </div>
     </article>

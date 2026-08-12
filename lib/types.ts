@@ -60,6 +60,8 @@ export type CommitView = {
   // small avatar stack for social proof
   cheerers: Person[];
   joiners: Person[];
+  // people the author put "in the loop" on this commit
+  looped_in: Person[];
   // the ship update (kind='ship') when status = shipped
   ship?: UpdateView | null;
 };

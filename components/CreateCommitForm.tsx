@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Plus, Check, ImagePlus, Loader2 } from "lucide-react";
+import { Sparkles, Plus, Check, ImagePlus, Loader2, Users, X } from "lucide-react";
 import {
   DeadlineField,
   defaultDeadline,
@@ -10,11 +10,14 @@ import {
   toLocalInput,
 } from "./DeadlineField";
 import { MediaStrip } from "./MediaStrip";
+import { AddPeopleSheet } from "./AddPeopleSheet";
+import { Avatar } from "./Avatar";
 import { Button } from "./ui";
 import { useThemeStyle } from "./ThemeStyle";
 import { cn } from "@/lib/utils";
 import { uploadMedia } from "@/lib/upload";
 import { createCommit } from "@/lib/actions/commits";
+import type { Person } from "@/lib/types";
 
 const MAX_MEDIA = 6;
 const MAX_VIDEO_SECS = 60;
@@ -45,6 +48,8 @@ export function CreateCommitForm() {
   const [media, setMedia] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  const [loopIn, setLoopIn] = useState<Person[]>([]);
+  const [peopleOpen, setPeopleOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [when, setWhen] = useState(defaultDeadline);
   const [pending, setPending] = useState(false);
@@ -108,6 +113,14 @@ export function CreateCommitForm() {
     setUploading(false);
   }
 
+  function togglePerson(person: Person) {
+    setLoopIn((prev) =>
+      prev.some((p) => p.id === person.id)
+        ? prev.filter((p) => p.id !== person.id)
+        : [...prev, person]
+    );
+  }
+
   async function submit() {
     if (!text.trim()) {
       setError("Say what you're going to do.");
@@ -120,6 +133,7 @@ export function CreateCommitForm() {
       context: noteOpen && context.trim() ? context : null,
       mediaUrls: media,
       deadline: new Date(when).toISOString(),
+      loopInIds: loopIn.map((p) => p.id),
     });
     if (!res.ok) {
       setPending(false);
@@ -202,8 +216,48 @@ export function CreateCommitForm() {
             </div>
           )}
 
-          {/* Two small, borderless sibling actions. */}
+          {/* People in the loop — chips with a live "+ add" affordance. */}
+          {loopIn.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 animate-rise">
+              <span className="text-[13px] font-medium text-muted">in the loop</span>
+              {loopIn.map((p) => (
+                <span
+                  key={p.id}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface py-1 pl-1 pr-2.5 text-[13.5px] font-medium text-ink"
+                >
+                  <Avatar person={p} size="xs" />
+                  {p.name}
+                  <button
+                    type="button"
+                    onClick={() => togglePerson(p)}
+                    aria-label={`Remove ${p.name}`}
+                    className="ml-0.5 text-muted hover:text-ink"
+                  >
+                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={() => setPeopleOpen(true)}
+                className="inline-flex items-center gap-1 rounded-full border border-dashed border-border-strong px-2.5 py-1 text-[13.5px] font-medium text-ink-soft hover:border-accent hover:text-accent"
+              >
+                <Plus className="h-3.5 w-3.5" /> add
+              </button>
+            </div>
+          )}
+
+          {/* Small, borderless sibling actions. */}
           <div className="flex items-center gap-5 text-[14px] font-medium">
+            {loopIn.length === 0 && (
+              <button
+                type="button"
+                onClick={() => setPeopleOpen(true)}
+                className="flex items-center gap-1.5 text-ink-soft"
+              >
+                <Users className="h-4 w-4" /> add people
+              </button>
+            )}
             {!noteOpen && (
               <button
                 type="button"
@@ -261,6 +315,13 @@ export function CreateCommitForm() {
           />
         </div>
       )}
+
+      <AddPeopleSheet
+        open={peopleOpen}
+        onClose={() => setPeopleOpen(false)}
+        selected={loopIn}
+        onToggle={togglePerson}
+      />
 
       {error && <p className="mt-4 text-sm text-[#d1477a]">{error}</p>}
 

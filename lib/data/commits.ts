@@ -40,6 +40,7 @@ export async function enrichCommits(
     commentsRes,
     joinsRes,
     shipsRes,
+    loopInsRes,
   ] = await Promise.all([
     parentIds.length
       ? supabase.from("commits").select("id, user_id, text").in("id", parentIds)
@@ -56,6 +57,7 @@ export async function enrichCommits(
       .select("id, commit_id, user_id, text, media_url, link_url, kind, created_at")
       .in("commit_id", ids)
       .eq("kind", "ship"),
+    supabase.from("loop_ins").select("user_id, commit_id, created_at").in("commit_id", ids),
   ]);
 
   const cheers = cheersRes.data ?? [];
@@ -63,6 +65,7 @@ export async function enrichCommits(
   const comments = commentsRes.data ?? [];
   const joins = joinsRes.data ?? [];
   const ships = shipsRes.data ?? [];
+  const loopIns = loopInsRes.data ?? [];
   const parents = (parentsRes.data ?? []) as {
     id: string;
     user_id: string;
@@ -96,6 +99,16 @@ export async function enrichCommits(
     cheerersByCommit.set(c.commit_id, list);
   }
 
+  // People in the loop, oldest first (the order the author added them).
+  const loopedInByCommit = new Map<string, string[]>();
+  for (const l of [...loopIns].sort((a, b) =>
+    String(a.created_at).localeCompare(String(b.created_at))
+  )) {
+    const list = loopedInByCommit.get(l.commit_id) ?? [];
+    list.push(l.user_id);
+    loopedInByCommit.set(l.commit_id, list);
+  }
+
   const viewerCheered = new Set(
     viewerId ? cheers.filter((c) => c.user_id === viewerId).map((c) => c.commit_id) : []
   );
@@ -117,6 +130,7 @@ export async function enrichCommits(
   for (const p of parents) profileIds.add(p.user_id);
   for (const list of cheerersByCommit.values()) list.forEach((id) => profileIds.add(id));
   for (const list of joinersByCommit.values()) list.forEach((id) => profileIds.add(id));
+  for (const list of loopedInByCommit.values()) list.forEach((id) => profileIds.add(id));
 
   const { data: profs } = profileIds.size
     ? await supabase.from("profiles").select(PERSON).in("id", [...profileIds])
@@ -181,6 +195,7 @@ export async function enrichCommits(
       is_owner: r.user_id === viewerId,
       cheerers: (cheerersByCommit.get(r.id) ?? []).map(person),
       joiners: (joinersByCommit.get(r.id) ?? []).map(person),
+      looped_in: (loopedInByCommit.get(r.id) ?? []).map(person),
       ship: shipView,
     };
   });

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, ArrowUp } from "lucide-react";
 import { Avatar } from "./Avatar";
+import { MentionText } from "./MentionText";
 import { cn, timeAgo, compact } from "@/lib/utils";
 import { addComment, toggleCommentLike } from "@/lib/actions/social";
 import type { CommentView, Person } from "@/lib/types";
@@ -117,7 +118,7 @@ function CommentItem({
             </span>
           </div>
           <p className="mt-0.5 whitespace-pre-wrap text-[15px] leading-snug text-ink-soft">
-            {comment.text}
+            <MentionText text={comment.text} />
           </p>
         </div>
         <div className="mt-1 flex items-center gap-4 pl-1.5">

@@ -10,6 +10,8 @@ type CreateInput = {
   mediaUrls?: string[] | null;
   deadline: string; // ISO
   parentCommitId?: string | null;
+  /** People to put "in the loop" — notified they were CC'd on this commit. */
+  loopInIds?: string[] | null;
 };
 
 export async function createCommit(
@@ -43,6 +45,15 @@ export async function createCommit(
     .single();
 
   if (error || !data) return { ok: false, error: error?.message ?? "Could not commit." };
+
+  // Put the tagged people in the loop. Each insert fires a 'loop_in' notice
+  // via trigger. Best-effort: a failure here shouldn't fail the whole commit.
+  const loopIds = [...new Set((input.loopInIds ?? []).filter((id) => id && id !== userId))];
+  if (loopIds.length) {
+    await supabase
+      .from("loop_ins")
+      .insert(loopIds.map((id) => ({ commit_id: data.id, user_id: id })));
+  }
 
   revalidatePath("/");
   revalidatePath("/me");

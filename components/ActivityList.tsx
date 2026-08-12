@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calendar, UserPlus, MessageCircle, Eye } from "lucide-react";
+import { Calendar, UserPlus, MessageCircle, Eye, AtSign } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { EmptyState } from "./ui";
 import { Bell } from "lucide-react";
@@ -36,6 +36,10 @@ function phrase(n: NotificationView): { verb: string; emoji?: string } {
       return { verb: "posted an update", emoji: "✏️" };
     case "not_yet":
       return { verb: "moved a deadline" };
+    case "loop_in":
+      return { verb: "put you in the loop", emoji: "🔔" };
+    case "mention":
+      return { verb: "mentioned you", emoji: "💬" };
   }
 }
 
@@ -63,6 +67,18 @@ function Icon({ n }: { n: NotificationView }) {
     return (
       <span className={cn(base, "bg-accent-soft text-accent")}>
         <MessageCircle className="h-[18px] w-[18px]" />
+      </span>
+    );
+  if (n.type === "loop_in")
+    return (
+      <span className={cn(base, "bg-accent-soft text-accent")}>
+        <Bell className="h-[18px] w-[18px]" />
+      </span>
+    );
+  if (n.type === "mention")
+    return (
+      <span className={cn(base, "bg-accent-soft text-accent")}>
+        <AtSign className="h-[18px] w-[18px]" />
       </span>
     );
   return null;

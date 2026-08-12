@@ -8,6 +8,7 @@ import type { CommitView } from "@/lib/types";
 import { toggleCheer } from "@/lib/actions/social";
 import { CheerersSheet } from "./CheerersSheet";
 import { HandHeart, HandComment } from "./HandIcons";
+import { ShareButton } from "./ShareButton";
 import { useThemeStyle } from "./ThemeStyle";
 
 const actionBase =
@@ -84,6 +85,9 @@ export function CommitActions({ commit }: { commit: CommitView }) {
         )}
         {commit.comment_count > 0 && <span>{compact(commit.comment_count)}</span>}
       </Link>
+
+      {/* Share — the paper-plane "send" affordance, à la Threads/Instagram. */}
+      <ShareButton commit={commit} />
 
       <CheerersSheet
         commitId={commit.id}

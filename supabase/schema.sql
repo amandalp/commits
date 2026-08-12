@@ -20,9 +20,12 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   create type notification_type as enum (
     'cheer', 'watch', 'join', 'comment', 'comment_reply',
-    'follow', 'deadline', 'shipped', 'update', 'not_yet'
+    'follow', 'deadline', 'shipped', 'update', 'not_yet', 'loop_in', 'mention'
   );
 exception when duplicate_object then null; end $$;
+-- backfill values for enums created before these existed
+alter type notification_type add value if not exists 'loop_in';
+alter type notification_type add value if not exists 'mention';
 
 -- ---------------------------------------------------------------------------
 --  profiles  (1:1 with auth.users)
@@ -106,6 +109,21 @@ create table if not exists watches (
 create index if not exists watches_commit_idx on watches(commit_id);
 
 -- ---------------------------------------------------------------------------
+--  loop_ins  ("put someone in the loop" — the author CCs a person on a commit)
+--  Unlike watches, the *author* creates these rows to tag someone; being
+--  looped in is purely informational (it doesn't make you a watcher).
+-- ---------------------------------------------------------------------------
+create table if not exists loop_ins (
+  id         uuid primary key default gen_random_uuid(),
+  commit_id  uuid not null references commits(id) on delete cascade,
+  user_id    uuid not null references profiles(id) on delete cascade,  -- the tagged person
+  created_at timestamptz not null default now(),
+  unique (commit_id, user_id)
+);
+create index if not exists loop_ins_commit_idx on loop_ins(commit_id);
+create index if not exists loop_ins_user_idx   on loop_ins(user_id);
+
+-- ---------------------------------------------------------------------------
 --  comments (+ likes)
 -- ---------------------------------------------------------------------------
 create table if not exists comments (
@@ -169,6 +187,24 @@ begin
   values (p_user, p_actor, p_commit, p_comment, p_type);
 end $$;
 
+-- Parse @username mentions out of free text and notify each real profile once.
+-- Used by commit context and comment bodies. The actor is the writer.
+create or replace function notify_mentions(
+  p_text text, p_actor uuid, p_commit uuid
+) returns void language plpgsql security definer set search_path = public as $$
+declare handle text; uid uuid;
+begin
+  if p_text is null then return; end if;
+  for handle in
+    select distinct lower((regexp_matches(p_text, '@([A-Za-z0-9_]{1,30})', 'g'))[1])
+  loop
+    select id into uid from profiles where lower(username) = handle;
+    if uid is not null then
+      perform notify(uid, p_actor, p_commit, 'mention');
+    end if;
+  end loop;
+end $$;
+
 create or replace function on_cheer() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare owner uuid;
@@ -184,6 +220,16 @@ declare owner uuid;
 begin
   select user_id into owner from commits where id = new.commit_id;
   perform notify(owner, new.user_id, new.commit_id, 'watch');
+  return new;
+end $$;
+
+-- Looping someone in notifies that person; the actor is the commit's author.
+create or replace function on_loop_in() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare owner uuid;
+begin
+  select user_id into owner from commits where id = new.commit_id;
+  perform notify(new.user_id, owner, new.commit_id, 'loop_in');
   return new;
 end $$;
 
@@ -204,6 +250,7 @@ begin
     select user_id into parent_author from comments where id = new.parent_comment_id;
     perform notify(parent_author, new.user_id, new.commit_id, 'comment_reply', new.id);
   end if;
+  perform notify_mentions(new.text, new.user_id, new.commit_id);
   return new;
 end $$;
 
@@ -215,6 +262,8 @@ begin
     select user_id into parent_owner from commits where id = new.parent_commit_id;
     perform notify(parent_owner, new.user_id, new.parent_commit_id, 'join');
   end if;
+  -- @mentions written into the commit's context note.
+  perform notify_mentions(new.context, new.user_id, new.id);
   return new;
 end $$;
 
@@ -250,6 +299,10 @@ create trigger trg_cheer after insert on cheers
 drop trigger if exists trg_watch on watches;
 create trigger trg_watch after insert on watches
   for each row execute function on_watch();
+
+drop trigger if exists trg_loop_in on loop_ins;
+create trigger trg_loop_in after insert on loop_ins
+  for each row execute function on_loop_in();
 
 drop trigger if exists trg_follow on follows;
 create trigger trg_follow after insert on follows
@@ -327,6 +380,7 @@ alter table commits        enable row level security;
 alter table follows        enable row level security;
 alter table cheers         enable row level security;
 alter table watches        enable row level security;
+alter table loop_ins       enable row level security;
 alter table comments       enable row level security;
 alter table comment_likes  enable row level security;
 alter table updates        enable row level security;
@@ -373,6 +427,19 @@ drop policy if exists "watches delete" on watches;
 create policy "watches read"   on watches for select using (true);
 create policy "watches write"  on watches for insert with check (auth.uid() = user_id);
 create policy "watches delete" on watches for delete using (auth.uid() = user_id);
+
+-- loop_ins: anyone can read (avatars are public); only the commit's author
+-- can loop people in or remove them.
+drop policy if exists "loop_ins read"   on loop_ins;
+drop policy if exists "loop_ins write"  on loop_ins;
+drop policy if exists "loop_ins delete" on loop_ins;
+create policy "loop_ins read"  on loop_ins for select using (true);
+create policy "loop_ins write" on loop_ins for insert with check (
+  exists (select 1 from commits c where c.id = commit_id and c.user_id = auth.uid())
+);
+create policy "loop_ins delete" on loop_ins for delete using (
+  exists (select 1 from commits c where c.id = commit_id and c.user_id = auth.uid())
+);
 
 -- comments
 drop policy if exists "comments read"   on comments;

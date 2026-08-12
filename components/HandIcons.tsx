@@ -52,3 +52,30 @@ export function HandComment({
     </svg>
   );
 }
+
+/** A loosely sketched paper aeroplane — the "send / share" mark. */
+export function HandShare({
+  className,
+  strokeWidth = 2.1,
+}: {
+  className?: string;
+  strokeWidth?: number;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {/* outline of the dart */}
+      <path d="M20.7 3.5C15.4 5.1 8 7.6 3.8 9.1c-.5.2-.5.8 0 1l6.6 2.9c.9 2.1 1.9 4.6 2.8 6.6.2.5.8.5 1 0C15.8 15.2 18.8 8 20.9 3.9c.2-.4-.1-.6-.2-.4z" />
+      {/* the crease from tail to belly */}
+      <path d="M20.5 3.8 10.4 13" />
+    </svg>
+  );
+}

@@ -12,8 +12,8 @@ import { OwnerPanel } from "@/components/OwnerPanel";
 import { Comments } from "@/components/Comments";
 import { ShipProof } from "@/components/ShipProof";
 import { MediaGallery } from "@/components/MediaGallery";
-import { ShareButton } from "@/components/ShareButton";
 import { CommitMenu } from "@/components/CommitMenu";
+import { MentionText } from "@/components/MentionText";
 import { StatusBadge } from "@/components/ui";
 import { timeAgo, deadlineLabel, deadlineFull, compact } from "@/lib/utils";
 
@@ -40,12 +40,7 @@ export default async function CommitDetailPage({
   return (
     <div>
       <TopBar
-        right={
-          <>
-            <ShareButton commit={commit} />
-            <CommitMenu commitId={commit.id} isOwner={commit.is_owner} />
-          </>
-        }
+        right={<CommitMenu commitId={commit.id} isOwner={commit.is_owner} />}
       />
 
       <div className="px-4 pb-8 sm:px-5">
@@ -112,13 +107,31 @@ export default async function CommitDetailPage({
 
           {commit.context && (
             <p className="mt-4 whitespace-pre-wrap border-t border-border-soft pt-4 text-[15px] leading-relaxed text-ink-soft">
-              {commit.context}
+              <MentionText text={commit.context} />
             </p>
           )}
 
           {commit.media_urls.length > 0 && (
             <div className={commit.context ? "mt-3" : "mt-4 border-t border-border-soft pt-4"}>
               <MediaGallery urls={commit.media_urls} />
+            </div>
+          )}
+
+          {commit.looped_in.length > 0 && (
+            <div className="mt-4 border-t border-border-soft pt-4">
+              <p className="mb-2 text-[13px] font-medium text-muted">in the loop</p>
+              <div className="flex flex-wrap gap-2">
+                {commit.looped_in.map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/u/${p.username}`}
+                    className="flex items-center gap-2 rounded-full border border-border bg-surface py-1 pl-1 pr-3.5 hover:border-border-strong"
+                  >
+                    <Avatar person={p} size="xs" />
+                    <span className="text-[13px] font-medium text-ink">{p.name}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>
