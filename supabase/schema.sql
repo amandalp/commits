@@ -35,6 +35,9 @@ create table if not exists profiles (
   bio         text,
   location    text,
   website     text,
+  instagram   text,
+  tiktok      text,
+  x           text,
   created_at  timestamptz not null default now()
 );
 
@@ -47,6 +50,7 @@ create table if not exists commits (
   text              text not null check (char_length(text) between 1 and 280),
   context           text check (char_length(context) <= 600),
   media_url         text,
+  media_urls        text[] not null default '{}',
   deadline          timestamptz not null,
   status            commit_status not null default 'active',
   original_deadline timestamptz not null,
@@ -58,6 +62,11 @@ create table if not exists commits (
 );
 -- backfill for tables created before media_url existed
 alter table commits add column if not exists media_url text;
+-- commits can now carry several attachments; keep media_url as the first item.
+alter table commits add column if not exists media_urls text[] not null default '{}';
+update commits
+  set media_urls = array[media_url]
+  where media_url is not null and (media_urls is null or media_urls = '{}');
 create index if not exists commits_user_idx    on commits(user_id, created_at desc);
 create index if not exists commits_created_idx  on commits(created_at desc);
 create index if not exists commits_parent_idx   on commits(parent_commit_id);

@@ -11,7 +11,7 @@ import { CheerCount } from "@/components/CheerCount";
 import { OwnerPanel } from "@/components/OwnerPanel";
 import { Comments } from "@/components/Comments";
 import { ShipProof } from "@/components/ShipProof";
-import { MediaPreview } from "@/components/MediaPreview";
+import { MediaGallery } from "@/components/MediaGallery";
 import { ShareButton } from "@/components/ShareButton";
 import { CommitMenu } from "@/components/CommitMenu";
 import { StatusBadge } from "@/components/ui";
@@ -116,9 +116,9 @@ export default async function CommitDetailPage({
             </p>
           )}
 
-          {commit.media_url && (
+          {commit.media_urls.length > 0 && (
             <div className={commit.context ? "mt-3" : "mt-4 border-t border-border-soft pt-4"}>
-              <MediaPreview url={commit.media_url} />
+              <MediaGallery urls={commit.media_urls} />
             </div>
           )}
         </div>

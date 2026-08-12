@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MapPin, Link as LinkIcon, ListChecks } from "lucide-react";
 import { Avatar } from "./Avatar";
+import { InstagramIcon, TikTokIcon, XIcon } from "./SocialIcons";
 import { FollowButton } from "./FollowButton";
 import { EditProfileSheet } from "./EditProfileSheet";
 import { CommitCard, ShippedCard } from "./CommitCard";
@@ -76,6 +77,32 @@ export function ProfileView({
           )}
         </div>
 
+        {(profile.instagram || profile.tiktok || profile.x) && (
+          <div className="mt-2.5 flex items-center gap-3.5 text-muted">
+            {profile.instagram && (
+              <SocialLink
+                href={`https://instagram.com/${profile.instagram}`}
+                label={`Instagram: @${profile.instagram}`}
+              >
+                <InstagramIcon className="h-[19px] w-[19px]" />
+              </SocialLink>
+            )}
+            {profile.tiktok && (
+              <SocialLink
+                href={`https://tiktok.com/@${profile.tiktok}`}
+                label={`TikTok: @${profile.tiktok}`}
+              >
+                <TikTokIcon className="h-[19px] w-[19px]" />
+              </SocialLink>
+            )}
+            {profile.x && (
+              <SocialLink href={`https://x.com/${profile.x}`} label={`X: @${profile.x}`}>
+                <XIcon className="h-[17px] w-[17px]" />
+              </SocialLink>
+            )}
+          </div>
+        )}
+
         <div className="mt-3 flex gap-4 text-[13.5px]">
           <span>
             <span className="font-bold text-ink">{compact(profile.following)}</span>{" "}
@@ -145,6 +172,29 @@ export function ProfileView({
         </div>
       )}
     </div>
+  );
+}
+
+function SocialLink({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      title={label}
+      className="text-muted transition-colors hover:text-ink"
+    >
+      {children}
+    </a>
   );
 }
 

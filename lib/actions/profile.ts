@@ -11,8 +11,23 @@ type ProfileInput = {
   bio?: string | null;
   location?: string | null;
   website?: string | null;
+  instagram?: string | null;
+  tiktok?: string | null;
+  x?: string | null;
   avatar_url?: string | null;
 };
+
+/** Reduce a pasted handle or profile URL to a bare handle (no @, no host). */
+function cleanHandle(value: string | null | undefined): string | null {
+  if (!value) return null;
+  let h = value.trim();
+  if (!h) return null;
+  // strip a full/partial URL down to the last path segment
+  h = h.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  if (h.includes("/")) h = h.split("/").pop() ?? h;
+  h = h.replace(/^@+/, "").trim();
+  return h || null;
+}
 
 export async function updateProfile(
   input: ProfileInput
@@ -45,6 +60,9 @@ export async function updateProfile(
   if (input.bio !== undefined) patch.bio = input.bio?.trim() || null;
   if (input.location !== undefined) patch.location = input.location?.trim() || null;
   if (input.website !== undefined) patch.website = input.website?.trim() || null;
+  if (input.instagram !== undefined) patch.instagram = cleanHandle(input.instagram);
+  if (input.tiktok !== undefined) patch.tiktok = cleanHandle(input.tiktok);
+  if (input.x !== undefined) patch.x = cleanHandle(input.x);
   if (input.avatar_url !== undefined) patch.avatar_url = input.avatar_url || null;
 
   const { data, error } = await supabase

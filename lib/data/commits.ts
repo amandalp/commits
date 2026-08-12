@@ -154,6 +154,12 @@ export async function enrichCommits(
       text: r.text,
       context: r.context,
       media_url: r.media_url ?? null,
+      // Prefer the array; fall back to the legacy single url for old rows.
+      media_urls: r.media_urls?.length
+        ? r.media_urls
+        : r.media_url
+          ? [r.media_url]
+          : [],
       deadline: r.deadline,
       original_deadline: r.original_deadline,
       status: r.status,

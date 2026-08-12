@@ -301,7 +301,10 @@ button,
   text-transform: lowercase;
 }
 
-:focus-visible {
+/* Keyboard focus ring for buttons, links, etc. Text fields opt out — they
+   signal focus with their own border-accent treatment, and stacking this
+   outline outside their rounded border reads as an ugly double box. */
+:focus-visible:not(input):not(textarea):not(select) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;

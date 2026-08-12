@@ -18,6 +18,9 @@ export type ProfileFull = Person & {
   bio: string | null;
   location: string | null;
   website: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  x: string | null;
   created_at: string;
   followers: number;
   following: number;
@@ -34,6 +37,7 @@ export type CommitView = {
   text: string;
   context: string | null;
   media_url: string | null;
+  media_urls: string[];
   deadline: string;
   original_deadline: string;
   status: CommitStatus;

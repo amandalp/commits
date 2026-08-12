@@ -7,6 +7,7 @@ type CreateInput = {
   text: string;
   context?: string | null;
   mediaUrl?: string | null;
+  mediaUrls?: string[] | null;
   deadline: string; // ISO
   parentCommitId?: string | null;
 };
@@ -22,13 +23,17 @@ export async function createCommit(
   const when = new Date(input.deadline);
   if (isNaN(when.getTime())) return { ok: false, error: "Pick a deadline." };
 
+  const mediaUrls = (input.mediaUrls ?? []).filter(Boolean);
+
   const { data, error } = await supabase
     .from("commits")
     .insert({
       user_id: userId,
       text,
       context: input.context?.trim() || null,
-      media_url: input.mediaUrl || null,
+      // Keep the legacy single column populated (first item) for back-compat.
+      media_url: mediaUrls[0] ?? input.mediaUrl ?? null,
+      media_urls: mediaUrls,
       deadline: when.toISOString(),
       original_deadline: when.toISOString(),
       parent_commit_id: input.parentCommitId ?? null,

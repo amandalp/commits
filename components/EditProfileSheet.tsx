@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { Sheet } from "./Sheet";
 import { Avatar } from "./Avatar";
+import { InstagramIcon, TikTokIcon, XIcon } from "./SocialIcons";
 import { Button } from "./ui";
 import { uploadMedia } from "@/lib/upload";
 import { updateProfile } from "@/lib/actions/profile";
@@ -17,6 +18,9 @@ export function EditProfileSheet({ profile }: { profile: ProfileFull }) {
   const [bio, setBio] = useState(profile.bio ?? "");
   const [location, setLocation] = useState(profile.location ?? "");
   const [website, setWebsite] = useState(profile.website ?? "");
+  const [instagram, setInstagram] = useState(profile.instagram ?? "");
+  const [tiktok, setTiktok] = useState(profile.tiktok ?? "");
+  const [x, setX] = useState(profile.x ?? "");
   const [avatar, setAvatar] = useState(profile.avatar_url);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +41,9 @@ export function EditProfileSheet({ profile }: { profile: ProfileFull }) {
       bio,
       location,
       website,
+      instagram,
+      tiktok,
+      x,
       avatar_url: avatar,
     });
     setPending(false);
@@ -104,6 +111,28 @@ export function EditProfileSheet({ profile }: { profile: ProfileFull }) {
             </Field>
           </div>
 
+          <div className="space-y-2.5">
+            <span className="block text-[13px] font-medium text-muted">Socials</span>
+            <HandleField
+              icon={<InstagramIcon className="h-[18px] w-[18px]" />}
+              value={instagram}
+              onChange={setInstagram}
+              placeholder="instagram"
+            />
+            <HandleField
+              icon={<TikTokIcon className="h-[18px] w-[18px]" />}
+              value={tiktok}
+              onChange={setTiktok}
+              placeholder="tiktok"
+            />
+            <HandleField
+              icon={<XIcon className="h-4 w-4" />}
+              value={x}
+              onChange={setX}
+              placeholder="x"
+            />
+          </div>
+
           {error && <p className="text-sm text-[#d1477a]">{error}</p>}
           <Button full size="lg" onClick={save} loading={pending}>
             Save
@@ -127,6 +156,34 @@ function Field({
     <label className="block flex-1">
       <span className="mb-1.5 block text-[13px] font-medium text-muted">{label}</span>
       {children}
+    </label>
+  );
+}
+
+function HandleField({
+  icon,
+  value,
+  onChange,
+  placeholder,
+}: {
+  icon: React.ReactNode;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <label className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface px-3.5 focus-within:border-accent">
+      <span className="shrink-0 text-muted">{icon}</span>
+      <span className="text-[15px] text-muted">@</span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-transparent py-3 text-[15px] text-ink outline-none placeholder:text-muted/60"
+        placeholder={placeholder}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+      />
     </label>
   );
 }

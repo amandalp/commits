@@ -2,27 +2,51 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Plus, Check, ImagePlus, Film, X, Loader2 } from "lucide-react";
-import { DeadlinePicker, toLocalInput } from "./DeadlinePicker";
-import { MediaPreview } from "./MediaPreview";
+import { Sparkles, Plus, Check, ImagePlus, Loader2 } from "lucide-react";
+import {
+  DeadlineField,
+  defaultDeadline,
+  parseNaturalDeadline,
+  toLocalInput,
+} from "./DeadlineField";
+import { MediaStrip } from "./MediaStrip";
 import { Button } from "./ui";
 import { useThemeStyle } from "./ThemeStyle";
 import { cn } from "@/lib/utils";
 import { uploadMedia } from "@/lib/upload";
 import { createCommit } from "@/lib/actions/commits";
 
+const MAX_MEDIA = 6;
+const MAX_VIDEO_SECS = 60;
+
+/** Read a local video's duration (seconds) without uploading it. */
+function videoDuration(file: File): Promise<number> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      resolve(v.duration || 0);
+    };
+    v.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(0);
+    };
+    v.src = url;
+  });
+}
+
 export function CreateCommitForm() {
   const router = useRouter();
   const { hand } = useThemeStyle();
   const [text, setText] = useState("");
   const [context, setContext] = useState("");
-  const [media, setMedia] = useState<string | null>(null);
+  const [media, setMedia] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [showContext, setShowContext] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [when, setWhen] = useState(() =>
-    toLocalInput(new Date(Date.now() + 864e5))
-  );
+  const [when, setWhen] = useState(defaultDeadline);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,16 +64,48 @@ export function CreateCommitForm() {
     el.style.height = `${el.scrollHeight}px`;
   }, [text]);
 
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Convenience only: if someone tacks a deadline onto the sentence
+  // ("… by Friday at noon"), lift it out into the date. Runs on blur so it
+  // never fights the user mid-keystroke, and only when the phrase parses.
+  function absorbNaturalLanguage() {
+    const m = text.trim().match(/^(.*\S)\s+by\s+(.+)$/i);
+    if (!m) return;
+    const parsed = parseNaturalDeadline(m[2]);
+    if (!parsed) return;
+    setText(m[1]);
+    setWhen(toLocalInput(parsed));
+  }
+
+  async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!files.length) return;
+
+    const room = MAX_MEDIA - media.length;
+    if (room <= 0) {
+      setError(`You can add up to ${MAX_MEDIA} items.`);
+      return;
+    }
+
     setUploading(true);
     setError(null);
-    const res = await uploadMedia(file, "commits");
+    const added: string[] = [];
+    for (const file of files.slice(0, room)) {
+      if (file.type.startsWith("video/")) {
+        const secs = await videoDuration(file);
+        if (secs > MAX_VIDEO_SECS + 0.5) {
+          setError(`Videos need to be ${MAX_VIDEO_SECS} seconds or shorter.`);
+          continue;
+        }
+      }
+      const res = await uploadMedia(file, "commits");
+      if ("error" in res) setError(res.error);
+      else added.push(res.url);
+    }
+    if (added.length) setMedia((m) => [...m, ...added]);
+    else if (files.length > room)
+      setError(`You can add up to ${MAX_MEDIA} items.`);
     setUploading(false);
-    if ("error" in res) setError(res.error);
-    else setMedia(res.url);
-    e.target.value = "";
   }
 
   async function submit() {
@@ -61,8 +117,8 @@ export function CreateCommitForm() {
     setError(null);
     const res = await createCommit({
       text,
-      context: showContext ? context : null,
-      mediaUrl: media,
+      context: noteOpen && context.trim() ? context : null,
+      mediaUrls: media,
       deadline: new Date(when).toISOString(),
     });
     if (!res.ok) {
@@ -107,6 +163,7 @@ export function CreateCommitForm() {
           ref={areaRef}
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, 280))}
+          onBlur={absorbNaturalLanguage}
           placeholder="launch the first version of Commits"
           rows={2}
           className={cn(
@@ -119,72 +176,91 @@ export function CreateCommitForm() {
         </div>
       </div>
 
-      <div className="mt-4">
-        <label className="mb-2 block text-[14px] font-medium text-muted">by</label>
-        <DeadlinePicker value={when} onChange={setWhen} />
-      </div>
+      <DeadlineField value={when} onChange={setWhen} hidden={!text.trim()} />
 
-      <div className="mt-5">
-        {!showContext ? (
-          <button
-            onClick={() => setShowContext(true)}
-            className="flex items-center gap-1.5 text-[14px] font-medium text-ink-soft"
-          >
-            <Plus className="h-4 w-4" /> {hand ? "add context" : "Add context (optional)"}
-          </button>
-        ) : (
-          <div className="space-y-2.5">
-            <textarea
-              value={context}
-              onChange={(e) => setContext(e.target.value.slice(0, 600))}
-              placeholder="Why is this important to you?"
-              rows={3}
-              autoFocus
-              className="w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] text-ink outline-none transition placeholder:text-faint focus:border-accent"
-            />
+      {text.trim() && (
+        <div className="mt-5 space-y-3">
+          {/* The optional note — an inline underlined field, not a boxed composer. */}
+          {noteOpen && (
+            <div className="animate-rise">
+              <label
+                className={cn(
+                  "mb-1 block text-[14px] font-medium text-muted",
+                  hand && "ink-hand text-[16px] text-ink-soft"
+                )}
+              >
+                {hand ? "a little context" : "A little context"}
+              </label>
+              <textarea
+                value={context}
+                onChange={(e) => setContext(e.target.value.slice(0, 600))}
+                placeholder="Why does this matter to you?"
+                rows={2}
+                autoFocus
+                className="w-full resize-none border-0 border-b border-border bg-transparent px-0 py-1.5 text-[15px] text-ink outline-none transition placeholder:text-faint focus:border-accent"
+              />
+            </div>
+          )}
 
-            {media && (
-              <div className="relative w-fit">
-                <MediaPreview url={media} className="max-h-56 w-auto" />
-                <button
-                  type="button"
-                  onClick={() => setMedia(null)}
-                  className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-ink/70 text-white"
-                  aria-label="Remove attachment"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+          {/* Two small, borderless sibling actions. */}
+          <div className="flex items-center gap-5 text-[14px] font-medium">
+            {!noteOpen && (
+              <button
+                type="button"
+                onClick={() => setNoteOpen(true)}
+                className="flex items-center gap-1.5 text-ink-soft"
+              >
+                <Plus className="h-4 w-4" /> add a note
+              </button>
             )}
-
-            {!media && (
+            {media.length === 0 && (
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13.5px] font-medium text-ink-soft hover:bg-cream-deep disabled:opacity-60"
+                className="flex items-center gap-1.5 text-ink-soft disabled:opacity-60"
               >
                 {uploading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <>
-                    <ImagePlus className="h-4 w-4" />
-                    <Film className="h-4 w-4" />
-                  </>
+                  <ImagePlus className="h-4 w-4" />
                 )}
-                {uploading ? "Uploading…" : "Photo or video"}
+                {uploading ? "Uploading…" : "add photo or video"}
               </button>
             )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*,video/*"
-              onChange={onFile}
-              className="hidden"
-            />
+            {noteOpen && (
+              <button
+                type="button"
+                onClick={() => {
+                  setNoteOpen(false);
+                  setContext("");
+                }}
+                className="ml-auto text-muted"
+              >
+                remove note
+              </button>
+            )}
           </div>
-        )}
-      </div>
+
+          {media.length > 0 && (
+            <MediaStrip
+              items={media}
+              max={MAX_MEDIA}
+              onRemove={(url) => setMedia((m) => m.filter((u) => u !== url))}
+              onAdd={() => fileRef.current?.click()}
+            />
+          )}
+
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            onChange={onFiles}
+            className="hidden"
+          />
+        </div>
+      )}
 
       {error && <p className="mt-4 text-sm text-[#d1477a]">{error}</p>}
 
@@ -201,9 +277,6 @@ export function CreateCommitForm() {
           {hand ? "put it on the record" : "Commit"}
         </span>
       </Button>
-      <p className="mt-3 text-center text-[13px] text-muted">
-        You&apos;re on the record.
-      </p>
     </div>
   );
 }

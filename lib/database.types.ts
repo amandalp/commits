@@ -23,6 +23,9 @@ export type ProfileRow = {
   bio: string | null;
   location: string | null;
   website: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  x: string | null;
   created_at: string;
 };
 
@@ -32,6 +35,7 @@ export type CommitRow = {
   text: string;
   context: string | null;
   media_url: string | null;
+  media_urls: string[] | null;
   deadline: string;
   status: CommitStatus;
   original_deadline: string;
