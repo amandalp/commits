@@ -46,6 +46,7 @@ create table if not exists commits (
   user_id           uuid not null references profiles(id) on delete cascade,
   text              text not null check (char_length(text) between 1 and 280),
   context           text check (char_length(context) <= 600),
+  media_url         text,
   deadline          timestamptz not null,
   status            commit_status not null default 'active',
   original_deadline timestamptz not null,
@@ -55,6 +56,8 @@ create table if not exists commits (
   shipped_at        timestamptz,
   closed_at         timestamptz
 );
+-- backfill for tables created before media_url existed
+alter table commits add column if not exists media_url text;
 create index if not exists commits_user_idx    on commits(user_id, created_at desc);
 create index if not exists commits_created_idx  on commits(created_at desc);
 create index if not exists commits_parent_idx   on commits(parent_commit_id);

@@ -132,3 +132,8 @@ export function compact(n: number): string {
 export function usernameOk(u: string): boolean {
   return /^[a-z0-9_]{3,20}$/.test(u);
 }
+
+/** True when a media URL points at a video file we should render with <video>. */
+export function isVideoUrl(url: string): boolean {
+  return /\.(mp4|webm|mov|m4v|ogg)($|\?)/i.test(url);
+}

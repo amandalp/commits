@@ -38,6 +38,9 @@
   --warn: #c9772f;
   --warn-soft: #fbeede;
 
+  /* Like / cheer — warm rose heart */
+  --like: #e05264;
+
   --radius: 18px;
   --radius-sm: 12px;
   --radius-lg: 24px;
@@ -73,6 +76,8 @@
 
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
+
+  --color-like: var(--like);
 
   --radius-card: var(--radius);
   --radius-sm: var(--radius-sm);

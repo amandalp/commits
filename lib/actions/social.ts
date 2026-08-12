@@ -2,6 +2,38 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser, type ActionResult } from "./helpers";
+import type { Person } from "@/lib/types";
+
+/** Everyone who cheered a commit, most recent first. */
+export async function getCheerers(commitId: string): Promise<Person[]> {
+  const { supabase } = await requireUser();
+  const { data: rows } = await supabase
+    .from("cheers")
+    .select("user_id, created_at")
+    .eq("commit_id", commitId)
+    .order("created_at", { ascending: false });
+
+  const ids = (rows ?? []).map((r) => r.user_id as string);
+  if (!ids.length) return [];
+
+  const { data: profs } = await supabase
+    .from("profiles")
+    .select("id, name, username, avatar_url")
+    .in("id", ids);
+
+  const byId = new Map(
+    (profs ?? []).map((p) => [(p as { id: string }).id, p as Record<string, unknown>])
+  );
+  return ids
+    .map((id) => byId.get(id))
+    .filter((p): p is Record<string, unknown> => Boolean(p))
+    .map((p) => ({
+      id: p.id as string,
+      name: (p.name as string) ?? "Someone",
+      username: (p.username as string) ?? "user",
+      avatar_url: (p.avatar_url as string | null) ?? null,
+    }));
+}
 
 export async function toggleCheer(
   commitId: string

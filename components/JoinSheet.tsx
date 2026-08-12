@@ -55,7 +55,7 @@ export function JoinSheet({
       </p>
 
       <label className="mb-1.5 block text-[13px] font-medium text-muted">
-        I&apos;m going to
+        I want to
       </label>
       <textarea
         value={text}

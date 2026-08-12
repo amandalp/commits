@@ -19,7 +19,7 @@ export function UpdatesTimeline({ updates }: { updates: UpdateView[] }) {
             <div className="flex-1 pb-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-ink">
-                  {u.author.name}
+                  @{u.author.username}
                 </span>
                 <span className="text-[13px] text-muted">
                   {u.kind === "not_yet" ? "moved the goalposts" : "posted an update"}{" "}

@@ -1,67 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { Heart, MessageCircle } from "lucide-react";
+import { cn, compact } from "@/lib/utils";
 import type { CommitView } from "@/lib/types";
-import { toggleCheer, toggleWatch } from "@/lib/actions/social";
-import { JoinSheet } from "./JoinSheet";
+import { toggleCheer } from "@/lib/actions/social";
+import { CheerersSheet } from "./CheerersSheet";
+import { HandHeart, HandComment } from "./HandIcons";
+import { useThemeStyle } from "./ThemeStyle";
 
-function Pill({
-  active,
-  onClick,
-  children,
-  emphasis,
-  activeCls,
-  ariaLabel,
-  animate,
-}: {
-  active?: boolean;
-  onClick?: () => void;
-  children: React.ReactNode;
-  emphasis?: boolean; // filled black (Join)
-  activeCls?: string;
-  ariaLabel?: string;
-  animate?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      aria-label={ariaLabel}
-      className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13.5px] font-semibold transition-all active:scale-[0.96]",
-        emphasis
-          ? "border-ink bg-ink text-white hover:bg-ink-soft"
-          : active
-          ? activeCls
-          : "border-border bg-surface text-ink-soft hover:border-border-strong",
-        animate && "animate-pop"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
+const actionBase =
+  "inline-flex h-10 items-center justify-center gap-1 rounded-full px-1.5 text-[13px] font-medium transition-all active:scale-90";
 
-export function CommitActions({
-  commit,
-  size = "card",
-}: {
-  commit: CommitView;
-  size?: "card" | "detail";
-}) {
-  const router = useRouter();
+export function CommitActions({ commit }: { commit: CommitView }) {
+  const { hand } = useThemeStyle();
   const [cheered, setCheered] = useState(commit.viewer_cheered);
   const [cheers, setCheers] = useState(commit.cheer_count);
-  const [watching, setWatching] = useState(commit.viewer_watching);
-  const [joined, setJoined] = useState(commit.viewer_joined);
-  const [joinOpen, setJoinOpen] = useState(false);
+  const [cheerersOpen, setCheerersOpen] = useState(false);
   const [burst, setBurst] = useState(false);
-
-  const resolved = commit.status === "shipped" || commit.status === "closed";
 
   function onCheer() {
     const next = !cheered;
@@ -79,76 +36,59 @@ export function CommitActions({
     });
   }
 
-  function onWatch() {
-    const next = !watching;
-    setWatching(next);
-    toggleWatch(commit.id).then((r) => {
-      if (!r.ok) setWatching(!next);
-    });
-  }
-
-  if (commit.is_owner) {
-    return (
-      <div className="flex items-center gap-2 text-[13px] font-medium text-muted">
-        <span className="inline-flex h-9 items-center rounded-full bg-cream-deep px-3.5 text-ink-soft">
-          Your commit
-        </span>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Pill
-        active={cheered}
-        onClick={onCheer}
-        animate={burst}
-        ariaLabel={cheered ? "Remove cheer" : "Cheer"}
-        activeCls="border-accent bg-accent-soft text-accent-strong"
-      >
-        <span className="text-base leading-none">🙌</span>
-        {cheered ? "Cheering" : "Cheer"}
-      </Pill>
+    <div className="flex flex-wrap items-center gap-0.5">
+      {/* Heart toggles the cheer; the number opens the list of who cheered. */}
+      <div className="flex items-center">
+        <button
+          type="button"
+          onClick={onCheer}
+          aria-pressed={cheered}
+          aria-label={cheered ? "Remove cheer" : "Cheer"}
+          title="Cheer"
+          className={cn(
+            actionBase,
+            cheered ? "text-like" : "text-ink-soft hover:bg-cream-deep",
+            burst && "animate-pop"
+          )}
+        >
+          {hand ? (
+            <HandHeart className="h-[21px] w-[21px]" filled={cheered} />
+          ) : (
+            <Heart className="h-[20px] w-[20px]" strokeWidth={2} fill={cheered ? "currentColor" : "none"} />
+          )}
+        </button>
+        {cheers > 0 && (
+          <button
+            type="button"
+            onClick={() => setCheerersOpen(true)}
+            aria-label="See who cheered"
+            className="-ml-2 rounded-full px-1 py-1 text-[13px] font-medium text-ink-soft hover:bg-cream-deep"
+          >
+            {compact(cheers)}
+          </button>
+        )}
+      </div>
 
-      <Pill
-        active={watching}
-        onClick={onWatch}
-        ariaLabel={watching ? "Stop watching" : "Watch"}
-        activeCls="border-accent bg-accent-soft text-accent-strong"
+      {/* Comment */}
+      <Link
+        href={`/commit/${commit.id}`}
+        aria-label="Comment"
+        title="Comment"
+        className={cn(actionBase, "text-ink-soft hover:bg-cream-deep")}
       >
-        <span className="text-base leading-none">👀</span>
-        {watching ? "Watching" : "Watch"}
-      </Pill>
-
-      {!resolved &&
-        (joined ? (
-          <Pill active activeCls="border-success-border bg-success-soft text-success-strong">
-            <Check className="h-4 w-4" strokeWidth={2.5} />
-            Joined
-          </Pill>
+        {hand ? (
+          <HandComment className="h-[21px] w-[21px]" />
         ) : (
-          <Pill emphasis onClick={() => setJoinOpen(true)}>
-            <Plus className="h-4 w-4" strokeWidth={2.5} />
-            Join
-          </Pill>
-        ))}
+          <MessageCircle className="h-[20px] w-[20px]" strokeWidth={2} />
+        )}
+        {commit.comment_count > 0 && <span>{compact(commit.comment_count)}</span>}
+      </Link>
 
-      {cheers > 0 && size === "detail" && (
-        <span className="ml-1 text-[13px] text-muted">
-          {cheers} cheering
-        </span>
-      )}
-
-      <JoinSheet
-        open={joinOpen}
-        onClose={() => setJoinOpen(false)}
-        parentCommitId={commit.id}
-        originalText={commit.text}
-        authorName={commit.author.name.split(" ")[0]}
-        onJoined={() => {
-          setJoined(true);
-          router.refresh();
-        }}
+      <CheerersSheet
+        commitId={commit.id}
+        open={cheerersOpen}
+        onClose={() => setCheerersOpen(false)}
       />
     </div>
   );

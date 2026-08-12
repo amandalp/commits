@@ -36,7 +36,7 @@ export function CommitStructure({
   tone?: "active" | "shipped" | "closed";
   className?: string;
 }) {
-  const lead = tone === "active" ? "I'm going to" : "Committed to";
+  const lead = tone === "active" ? "I want to" : "Committed to";
   return (
     <div className={cn("font-display", className)}>
       <span className="mb-1.5 block text-[13px] font-medium tracking-normal text-muted">

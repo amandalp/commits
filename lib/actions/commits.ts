@@ -6,6 +6,7 @@ import { requireUser, type ActionResult } from "./helpers";
 type CreateInput = {
   text: string;
   context?: string | null;
+  mediaUrl?: string | null;
   deadline: string; // ISO
   parentCommitId?: string | null;
 };
@@ -27,6 +28,7 @@ export async function createCommit(
       user_id: userId,
       text,
       context: input.context?.trim() || null,
+      media_url: input.mediaUrl || null,
       deadline: when.toISOString(),
       original_deadline: when.toISOString(),
       parent_commit_id: input.parentCommitId ?? null,

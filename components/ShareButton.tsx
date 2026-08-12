@@ -52,9 +52,9 @@ export function ShareButton({
       <button
         onClick={nativeShare}
         aria-label="Share"
-        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 text-[13.5px] font-semibold text-ink-soft hover:border-border-strong"
+        className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full px-2.5 text-[13.5px] font-semibold text-ink hover:bg-cream-deep"
       >
-        <Share2 className="h-4 w-4" />
+        <Share2 className="h-5 w-5" />
         {label && "Share"}
       </button>
 

@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/data/session";
-import { getCommit, getUpdates, getJoiners } from "@/lib/data/commits";
-import { getComments, getCommentCount } from "@/lib/data/comments";
+import { getCommit, getJoiners } from "@/lib/data/commits";
+import { getComments } from "@/lib/data/comments";
 import { TopBar } from "@/components/TopBar";
 import { Avatar, AvatarStack } from "@/components/Avatar";
 import { CommitStructure } from "@/components/CommitStructure";
 import { CommitActions } from "@/components/CommitActions";
+import { CheerCount } from "@/components/CheerCount";
 import { OwnerPanel } from "@/components/OwnerPanel";
-import { UpdatesTimeline } from "@/components/UpdatesTimeline";
 import { Comments } from "@/components/Comments";
 import { ShipProof } from "@/components/ShipProof";
+import { MediaPreview } from "@/components/MediaPreview";
 import { ShareButton } from "@/components/ShareButton";
 import { CommitMenu } from "@/components/CommitMenu";
 import { StatusBadge } from "@/components/ui";
@@ -28,11 +29,9 @@ export default async function CommitDetailPage({
   const commit = await getCommit(id, viewer?.id ?? null);
   if (!commit) notFound();
 
-  const [updates, joiners, comments, commentCount] = await Promise.all([
-    getUpdates(id),
+  const [joiners, comments] = await Promise.all([
     commit.join_count > 0 ? getJoiners(id) : Promise.resolve([]),
     getComments(id, viewer?.id ?? null, "newest"),
-    getCommentCount(id),
   ]);
 
   const shipped = commit.status === "shipped";
@@ -55,26 +54,40 @@ export default async function CommitDetailPage({
           <Link href={`/u/${commit.author.username}`}>
             <Avatar person={commit.author} size="md" />
           </Link>
-          <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <Link
               href={`/u/${commit.author.username}`}
-              className="block font-semibold text-ink hover:underline"
+              className="truncate font-semibold text-ink hover:underline"
             >
-              {commit.author.name}
+              @{commit.author.username}
             </Link>
-            <div className="text-[13px] text-muted">
-              @{commit.author.username} · {timeAgo(commit.created_at)}
-            </div>
+            <span className="shrink-0 text-[13px] text-faint">
+              {timeAgo(commit.created_at)}
+            </span>
           </div>
         </div>
 
         {commit.parent && (
-          <Link
-            href={`/commit/${commit.parent.id}`}
-            className="mt-3 inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink-soft"
-          >
-            ↪ Joined {commit.parent.author.name.split(" ")[0]}&apos;s Commit
-          </Link>
+          <div className="mt-3 inline-flex items-center gap-1 text-[13px] text-muted">
+            <Link
+              href={`/commit/${commit.parent.id}`}
+              className="hover:text-ink-soft"
+            >
+              ↪ joined
+            </Link>
+            <Link
+              href={`/u/${commit.parent.author.username}`}
+              className="font-semibold text-ink hover:underline"
+            >
+              @{commit.parent.author.username}
+            </Link>
+            <Link
+              href={`/commit/${commit.parent.id}`}
+              className="hover:text-ink-soft"
+            >
+              &apos;s commit
+            </Link>
+          </div>
         )}
 
         {/* commitment card */}
@@ -102,6 +115,12 @@ export default async function CommitDetailPage({
               {commit.context}
             </p>
           )}
+
+          {commit.media_url && (
+            <div className={commit.context ? "mt-3" : "mt-4 border-t border-border-soft pt-4"}>
+              <MediaPreview url={commit.media_url} />
+            </div>
+          )}
         </div>
 
         {/* ship outcome */}
@@ -122,10 +141,11 @@ export default async function CommitDetailPage({
 
         {/* social summary */}
         <div className="mt-4 flex items-center gap-4 text-[14px] text-muted">
-          <span className="flex items-center gap-1.5">
-            <span className="text-base">🙌</span>
-            <span className="font-semibold text-ink">{compact(commit.cheer_count)}</span>
-          </span>
+          <CheerCount
+            commitId={commit.id}
+            initialCheered={commit.viewer_cheered}
+            initialCount={commit.cheer_count}
+          />
           {commit.join_count > 0 && (
             <span className="flex items-center gap-2">
               <AvatarStack people={commit.joiners} />
@@ -148,7 +168,7 @@ export default async function CommitDetailPage({
               </div>
             ) : null
           ) : (
-            <CommitActions commit={commit} size="detail" />
+            <CommitActions commit={commit} />
           )}
         </div>
 
@@ -174,13 +194,6 @@ export default async function CommitDetailPage({
           </div>
         )}
 
-        {/* updates */}
-        {updates.length > 0 && (
-          <div className="mt-6">
-            <UpdatesTimeline updates={updates} />
-          </div>
-        )}
-
         {/* comments */}
         {viewer && (
           <div className="mt-7">
@@ -188,7 +201,7 @@ export default async function CommitDetailPage({
               commitId={commit.id}
               viewer={viewer}
               initialComments={comments}
-              totalCount={commentCount}
+              authorUsername={commit.author.username}
             />
           </div>
         )}

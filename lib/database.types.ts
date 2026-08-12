@@ -31,6 +31,7 @@ export type CommitRow = {
   user_id: string;
   text: string;
   context: string | null;
+  media_url: string | null;
   deadline: string;
   status: CommitStatus;
   original_deadline: string;

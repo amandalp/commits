@@ -33,6 +33,7 @@ export type CommitView = {
   id: string;
   text: string;
   context: string | null;
+  media_url: string | null;
   deadline: string;
   original_deadline: string;
   status: CommitStatus;

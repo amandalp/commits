@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { MessageCircle, Clock, PartyPopper } from "lucide-react";
-import { Avatar, AvatarStack } from "./Avatar";
+import { PartyPopper } from "lucide-react";
+import { Avatar } from "./Avatar";
 import { CommitStructure } from "./CommitStructure";
 import { CommitActions } from "./CommitActions";
 import { StatusBadge } from "./ui";
 import { ShipProof } from "./ShipProof";
 import { ShareButton } from "./ShareButton";
-import { CheerInline } from "./CheerInline";
-import { timeAgo, deadlineLabel, countdown, compact } from "@/lib/utils";
+import { timeAgo, deadlineLabel, countdown } from "@/lib/utils";
 import type { CommitView } from "@/lib/types";
 
 function CardHeader({
@@ -30,15 +29,14 @@ function CardHeader({
             href={`/u/${commit.author.username}`}
             className="truncate font-semibold text-ink hover:underline"
           >
-            {commit.author.name}
+            @{commit.author.username}
           </Link>
+          <span className="shrink-0 text-[13px] text-faint">
+            {timeAgo(commit.created_at)}
+          </span>
           {badge}
         </div>
-        <div className="text-[13px] text-muted">@{commit.author.username}</div>
-      </div>
-      <div className="flex shrink-0 items-center gap-1 text-[13px] text-faint">
-        <Clock className="h-3.5 w-3.5" />
-        {timeAgo(commit.created_at)}
+        <JoinedFrom commit={commit} />
       </div>
     </div>
   );
@@ -47,41 +45,24 @@ function CardHeader({
 function JoinedFrom({ commit }: { commit: CommitView }) {
   if (!commit.parent) return null;
   return (
-    <Link
-      href={`/commit/${commit.parent.id}`}
-      className="mb-2 inline-flex items-center gap-1 text-[12.5px] text-muted hover:text-ink-soft"
-    >
-      ↪ Joined {commit.parent.author.name.split(" ")[0]}&apos;s Commit
-    </Link>
-  );
-}
-
-function SocialProof({ commit }: { commit: CommitView }) {
-  const bits: React.ReactNode[] = [];
-  if (commit.cheer_count > 0)
-    bits.push(
-      <span key="c" className="flex items-center gap-1.5">
-        <AvatarStack people={commit.cheerers} />
-        {compact(commit.cheer_count)} cheering
-      </span>
-    );
-  if (commit.join_count > 0)
-    bits.push(<span key="j">{compact(commit.join_count)} joined</span>);
-
-  return (
-    <div className="mt-3 flex items-center gap-3 text-[13px] text-muted">
-      {bits.map((b, i) => (
-        <span key={i} className="flex items-center gap-3">
-          {i > 0 && <span className="text-border-strong">·</span>}
-          {b}
-        </span>
-      ))}
+    <div className="mt-0.5 inline-flex items-center gap-1 text-[12.5px] text-muted">
       <Link
-        href={`/commit/${commit.id}`}
-        className="ml-auto flex items-center gap-1.5 hover:text-ink-soft"
+        href={`/commit/${commit.parent.id}`}
+        className="hover:text-ink-soft"
       >
-        <MessageCircle className="h-4 w-4" />
-        {commit.comment_count > 0 ? compact(commit.comment_count) : ""}
+        ↪ joined
+      </Link>
+      <Link
+        href={`/u/${commit.parent.author.username}`}
+        className="font-semibold text-ink hover:underline"
+      >
+        @{commit.parent.author.username}
+      </Link>
+      <Link
+        href={`/commit/${commit.parent.id}`}
+        className="hover:text-ink-soft"
+      >
+        &apos;s commit
       </Link>
     </div>
   );
@@ -103,7 +84,6 @@ export function CommitCard({ commit }: { commit: CommitView }) {
       />
 
       <div className="mt-3 pl-[calc(2.75rem+0.75rem)]">
-        <JoinedFrom commit={commit} />
         <Link href={`/commit/${commit.id}`} className="block">
           <CommitStructure
             text={commit.text}
@@ -125,8 +105,6 @@ export function CommitCard({ commit }: { commit: CommitView }) {
             <CommitActions commit={commit} />
           </div>
         )}
-
-        <SocialProof commit={commit} />
       </div>
     </article>
   );
@@ -172,19 +150,8 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
           />
         )}
 
-        <div className="mt-3.5 flex items-center gap-2">
-          <CheerInline
-            commitId={commit.id}
-            initialCheered={commit.viewer_cheered}
-            initialCount={commit.cheer_count}
-          />
-          <Link
-            href={`/commit/${commit.id}`}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 text-[13.5px] font-semibold text-ink-soft hover:border-border-strong"
-          >
-            <MessageCircle className="h-4 w-4" />
-            {commit.comment_count > 0 ? compact(commit.comment_count) : "Comment"}
-          </Link>
+        <div className="mt-3.5 flex items-center gap-0.5">
+          <CommitActions commit={commit} />
           <ShareButton commit={commit} />
         </div>
       </div>

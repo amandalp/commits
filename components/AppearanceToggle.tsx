@@ -11,7 +11,7 @@ function Preview({ variant }: { variant: ThemeStyle }) {
   const hand = variant === "handwritten";
   return (
     <div className="rounded-xl border border-border bg-surface px-3.5 py-3">
-      <div className="text-[10px] font-medium text-muted">I&apos;m going to</div>
+      <div className="text-[10px] font-medium text-muted">I want to</div>
       <div
         className="text-ink"
         style={

@@ -153,6 +153,7 @@ export async function enrichCommits(
       id: r.id,
       text: r.text,
       context: r.context,
+      media_url: r.media_url ?? null,
       deadline: r.deadline,
       original_deadline: r.original_deadline,
       status: r.status,

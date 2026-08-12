@@ -13,12 +13,12 @@ export function Comments({
   commitId,
   viewer,
   initialComments,
-  totalCount,
+  authorUsername,
 }: {
   commitId: string;
   viewer: Person;
   initialComments: CommentView[];
-  totalCount: number;
+  authorUsername: string;
 }) {
   const router = useRouter();
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
@@ -30,9 +30,7 @@ export function Comments({
   return (
     <section id="comments">
       <div className="mb-3 flex items-center justify-between px-1">
-        <h2 className="text-[15px] font-bold text-ink">
-          Comments{totalCount > 0 ? ` · ${compact(totalCount)}` : ""}
-        </h2>
+        <h2 className="text-[15px] font-bold text-ink">Support</h2>
         {comments.length > 1 && (
           <button
             onClick={() => setSort((s) => (s === "newest" ? "oldest" : "newest"))}
@@ -43,9 +41,14 @@ export function Comments({
         )}
       </div>
 
-      <Composer commitId={commitId} viewer={viewer} onPosted={() => router.refresh()} />
+      <Composer
+        commitId={commitId}
+        viewer={viewer}
+        placeholder={`share support with ${authorUsername}…`}
+        onPosted={() => router.refresh()}
+      />
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-4 space-y-4 pl-[7px]">
         {ordered.length === 0 ? (
           <p className="px-1 py-4 text-center text-sm text-muted">
             No comments yet. Say something encouraging.
@@ -101,13 +104,13 @@ function CommentItem({
         <Avatar person={comment.author} size={isReply ? "xs" : "sm"} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="rounded-2xl rounded-tl-md bg-surface px-3.5 py-2.5">
+        <div>
           <div className="flex items-baseline gap-2">
             <Link
               href={`/u/${comment.author.username}`}
               className="text-sm font-semibold text-ink hover:underline"
             >
-              {comment.author.name}
+              @{comment.author.username}
             </Link>
             <span className="text-[12px] text-muted">
               {timeAgo(comment.created_at)}
@@ -207,31 +210,34 @@ function Composer({
   }
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div
+      className={cn(
+        "flex items-center gap-2.5 rounded-full border border-border bg-cream-deep pr-1.5",
+        isCompact ? "pl-4" : "pl-1.5"
+      )}
+    >
       {!isCompact && <Avatar person={viewer} size="sm" />}
-      <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-surface pl-4 pr-1.5">
-        <input
-          ref={ref}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              submit();
-            }
-          }}
-          placeholder={placeholder}
-          className="flex-1 bg-transparent py-2.5 text-[15px] text-ink outline-none placeholder:text-faint"
-        />
-        <button
-          onClick={submit}
-          disabled={!text.trim() || pending}
-          aria-label="Send"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white transition disabled:opacity-30"
-        >
-          <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
-        </button>
-      </div>
+      <input
+        ref={ref}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            submit();
+          }
+        }}
+        placeholder={placeholder}
+        className="flex-1 bg-transparent py-2.5 text-[15px] text-ink outline-none placeholder:text-faint"
+      />
+      <button
+        onClick={submit}
+        disabled={!text.trim() || pending}
+        aria-label="Send"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white transition disabled:opacity-30"
+      >
+        <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
+      </button>
     </div>
   );
 }

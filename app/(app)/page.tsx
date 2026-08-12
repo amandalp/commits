@@ -27,8 +27,8 @@ export default async function HomePage({
 
   return (
     <div>
-      <header className="sticky top-0 z-20 border-b border-border-soft bg-cream/90 backdrop-blur-md">
-        <div className="flex items-center justify-between px-4 pb-2 pt-3.5">
+      <header className="sticky top-0 z-20 border-b border-border-soft bg-cream/90 backdrop-blur-md sm:pt-[86px]">
+        <div className="flex items-center justify-between px-4 pb-2 pt-3.5 sm:hidden">
           <h1 className="text-[24px] font-extrabold tracking-tight text-ink">
             <Wordmark />
           </h1>
