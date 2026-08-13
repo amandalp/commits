@@ -37,9 +37,14 @@ export async function generateMetadata({
   const { id } = await params;
   const c = await getPublic(id);
   if (!c) return { title: "Commits" };
+  const shipped = c.status === "shipped";
   return {
-    title: `${c.author.name}: I'm going to ${c.text}`,
-    description: "Put your commitments on the record. Hold me to it →",
+    title: shipped
+      ? `${c.author.name}: I said I’d ${c.text} — said it, did it.`
+      : `${c.author.name}: I'm going to ${c.text}`,
+    description: shipped
+      ? "Said it. Did it. See the whole story on Commits →"
+      : "Put your commitments on the record. Hold me to it →",
   };
 }
 

@@ -69,7 +69,7 @@ export function NotYetForm({
               <CalendarClock className="h-6 w-6" />
             </span>
             <span>
-              <span className="block font-bold text-ink">Set a new deadline</span>
+              <span className="block font-bold text-ink">I need more time</span>
               <span className="block text-[13px] text-muted">
                 Keep going — your history stays visible.
               </span>
@@ -83,7 +83,7 @@ export function NotYetForm({
               <Archive className="h-6 w-6" />
             </span>
             <span>
-              <span className="block font-bold text-ink">Close this Commit</span>
+              <span className="block font-bold text-ink">I’m letting this one go</span>
               <span className="block text-[13px] text-muted">
                 Put it to rest for now.
               </span>
@@ -113,7 +113,7 @@ export function NotYetForm({
               onClick={() => run({ newDeadline: new Date(when).toISOString() })}
               loading={pending}
             >
-              Move deadline
+              keep going
             </Button>
           </div>
         </div>
@@ -130,8 +130,8 @@ export function NotYetForm({
             <Button variant="secondary" onClick={() => setMode("choose")}>
               Back
             </Button>
-            <Button full variant="danger" onClick={() => run({ close: true })} loading={pending}>
-              Close this Commit
+            <Button full variant="secondary" onClick={() => run({ close: true })} loading={pending}>
+              let it go
             </Button>
           </div>
         </div>

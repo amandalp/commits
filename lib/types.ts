@@ -14,6 +14,13 @@ export type Person = {
   avatar_url: string | null;
 };
 
+/** A person in a followers/following list, with the viewer's relationship to them. */
+export type PersonWithFollow = Person & {
+  bio: string | null;
+  is_following: boolean;
+  is_self: boolean;
+};
+
 export type ProfileFull = Person & {
   bio: string | null;
   location: string | null;

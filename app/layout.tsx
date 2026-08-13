@@ -17,7 +17,7 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "Commits — put it on the record",
+  title: "Commits",
   description:
     "I'm going to [do something] by [deadline]. Commit publicly, get cheered on, and ship it.",
   openGraph: {

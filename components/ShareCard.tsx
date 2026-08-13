@@ -46,7 +46,7 @@ export function ShareCard({
 
         <div className="flex flex-1 flex-col justify-center py-[4cqi]">
           <div style={{ fontSize: "3.4cqi", letterSpacing: "0.12em" }} className="font-bold text-muted">
-            {shipped ? "I COMMITTED TO" : "I'M GOING TO"}
+            {shipped ? "I SAID I’D" : "I'M GOING TO"}
           </div>
           <div
             style={{ fontSize: "9cqi", lineHeight: 1.04 }}
@@ -77,9 +77,13 @@ export function ShareCard({
           </div>
           <span
             style={{ fontSize: "3.4cqi" }}
-            className="ml-auto shrink-0 font-semibold text-accent"
+            className={
+              shipped
+                ? "ml-auto shrink-0 font-semibold text-success-strong"
+                : "ml-auto shrink-0 font-semibold text-accent"
+            }
           >
-            Hold me to it →
+            {shipped ? "said it. did it." : "Hold me to it →"}
           </span>
         </div>
       </div>

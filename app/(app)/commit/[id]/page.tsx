@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/data/session";
-import { getCommit, getJoiners } from "@/lib/data/commits";
+import { getCommit, getJoiners, getUpdates } from "@/lib/data/commits";
 import { getComments } from "@/lib/data/comments";
 import { TopBar } from "@/components/TopBar";
 import { Avatar, AvatarStack } from "@/components/Avatar";
 import { CommitStructure } from "@/components/CommitStructure";
 import { CommitActions } from "@/components/CommitActions";
-import { OwnerPanel } from "@/components/OwnerPanel";
-import { Comments } from "@/components/Comments";
-import { ShipProof } from "@/components/ShipProof";
+import { OwnerComposer } from "@/components/OwnerComposer";
+import { Conversation } from "@/components/Conversation";
 import { MediaGallery } from "@/components/MediaGallery";
 import { CommitMenu } from "@/components/CommitMenu";
 import { MentionText } from "@/components/MentionText";
@@ -28,9 +27,10 @@ export default async function CommitDetailPage({
   const commit = await getCommit(id, viewer?.id ?? null);
   if (!commit) notFound();
 
-  const [joiners, comments] = await Promise.all([
+  const [joiners, comments, updates] = await Promise.all([
     commit.join_count > 0 ? getJoiners(id) : Promise.resolve([]),
     getComments(id, viewer?.id ?? null, "newest"),
+    getUpdates(id),
   ]);
 
   const shipped = commit.status === "shipped";
@@ -48,17 +48,20 @@ export default async function CommitDetailPage({
           <Link href={`/u/${commit.author.username}`}>
             <Avatar person={commit.author} size="md" />
           </Link>
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-baseline gap-2">
             <Link
               href={`/u/${commit.author.username}`}
               className="truncate font-semibold text-ink hover:underline"
             >
-              @{commit.author.username}
+              {commit.author.name}
             </Link>
             <span className="shrink-0 text-[13px] text-faint">
-              {timeAgo(commit.created_at)}
+              committed {timeAgo(commit.created_at)}
             </span>
           </div>
+          {(shipped || closed) && (
+            <StatusBadge kind={shipped ? "shipped" : "closed"} />
+          )}
         </div>
 
         {commit.parent && (
@@ -84,76 +87,58 @@ export default async function CommitDetailPage({
           </div>
         )}
 
-        {/* commitment card */}
-        <div className="mt-4 rounded-3xl border border-border bg-surface p-5">
-          <div className="flex items-start justify-between gap-3">
-            <CommitStructure
-              text={commit.text}
-              deadline={commit.deadline}
-              size="lg"
-              tone={shipped ? "shipped" : closed ? "closed" : "active"}
-            />
-            {(shipped || closed) && (
-              <StatusBadge kind={shipped ? "shipped" : "closed"} />
-            )}
-          </div>
+        {/* the promise itself — light hero, no task-card chrome */}
+        <div className="mt-5">
+          <CommitStructure
+            text={commit.text}
+            deadline={commit.deadline}
+            tone={shipped ? "shipped" : closed ? "closed" : "active"}
+            hero
+          />
 
           {shipped && commit.shipped_at && (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-[13px] font-semibold text-success-strong">
-              ✓ Shipped on {deadlineLabel(commit.shipped_at)}
+            <div className="mt-3 flex items-center gap-2">
+              <span className="ink-hand text-[15px] font-semibold text-success-strong">
+                said it. did it.
+              </span>
+              <span className="text-[12.5px] text-muted">
+                · shipped {deadlineLabel(commit.shipped_at)}
+              </span>
             </div>
           )}
 
           {commit.context && (
-            <p className="mt-4 whitespace-pre-wrap border-t border-border-soft pt-4 text-[15px] leading-relaxed text-ink-soft">
+            <p className="mt-4 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft">
               <MentionText text={commit.context} />
             </p>
           )}
 
           {commit.media_urls.length > 0 && (
-            <div className={commit.context ? "mt-3" : "mt-4 border-t border-border-soft pt-4"}>
+            <div className="mt-4">
               <MediaGallery urls={commit.media_urls} />
             </div>
           )}
 
           {commit.looped_in.length > 0 && (
-            <div className="mt-4 border-t border-border-soft pt-4">
-              <p className="mb-2 text-[13px] font-medium text-muted">in the loop</p>
-              <div className="flex flex-wrap gap-2">
-                {commit.looped_in.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/u/${p.username}`}
-                    className="flex items-center gap-2 rounded-full border border-border bg-surface py-1 pl-1 pr-3.5 hover:border-border-strong"
-                  >
-                    <Avatar person={p} size="xs" />
-                    <span className="text-[13px] font-medium text-ink">{p.name}</span>
-                  </Link>
-                ))}
-              </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-[13px] font-medium text-muted">in the loop:</span>
+              {commit.looped_in.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/u/${p.username}`}
+                  className="flex items-center gap-1.5 rounded-full border border-border bg-surface py-0.5 pl-0.5 pr-3 hover:border-border-strong"
+                >
+                  <Avatar person={p} size="xs" />
+                  <span className="text-[13px] font-medium text-ink">{p.name}</span>
+                </Link>
+              ))}
             </div>
           )}
         </div>
 
-        {/* ship outcome */}
-        {shipped && commit.ship && (commit.ship.text || commit.ship.media_url || commit.ship.link_url) && (
-          <div className="mt-4">
-            <h2 className="mb-2 px-1 text-[15px] font-bold text-ink">What happened</h2>
-            {commit.ship.text && (
-              <p className="text-[15px] leading-relaxed text-ink-soft">
-                {commit.ship.text}
-              </p>
-            )}
-            <ShipProof
-              mediaUrl={commit.ship.media_url}
-              linkUrl={commit.ship.link_url}
-            />
-          </div>
-        )}
-
         {/* actions — the same heart · comment · send row everywhere, with the
             joined stack and deadline alongside it. */}
-        <div className="mt-4 flex items-center gap-4">
+        <div className="mt-5 flex items-center gap-4">
           <CommitActions commit={commit} />
           {commit.join_count > 0 && (
             <span className="flex items-center gap-2 text-[14px] text-muted">
@@ -168,16 +153,32 @@ export default async function CommitDetailPage({
           )}
         </div>
 
-        {/* owners keep the ship / not-yet controls while the commit is live */}
+        {/* the creator's control, directly beneath the promise */}
         {commit.is_owner && !shipped && !closed && (
-          <div className="mt-4">
-            <OwnerPanel commit={commit} />
+          <div className="mt-6">
+            <OwnerComposer
+              commitId={commit.id}
+              text={commit.text}
+              originalDeadline={commit.original_deadline}
+            />
           </div>
         )}
 
-        {/* joiners */}
+        {/* one promise, one evolving conversation */}
+        <div className="mt-7 border-t border-border-soft pt-6">
+          <Conversation
+            commitId={commit.id}
+            viewer={viewer}
+            comments={comments}
+            updates={updates}
+            ship={commit.ship ?? null}
+            authorId={commit.author.id}
+          />
+        </div>
+
+        {/* who joined — secondary social proof */}
         {joiners.length > 0 && (
-          <div className="mt-6">
+          <div className="mt-8">
             <h2 className="mb-2.5 px-1 text-[15px] font-bold text-ink">
               {compact(commit.join_count)}{" "}
               {commit.join_count === 1 ? "person" : "people"} joined this Commit
@@ -194,18 +195,6 @@ export default async function CommitDetailPage({
                 </Link>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* comments */}
-        {viewer && (
-          <div className="mt-7">
-            <Comments
-              commitId={commit.id}
-              viewer={viewer}
-              initialComments={comments}
-              authorUsername={commit.author.username}
-            />
           </div>
         )}
       </div>

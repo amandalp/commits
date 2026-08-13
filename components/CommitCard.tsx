@@ -94,10 +94,14 @@ export function CommitCard({ commit }: { commit: CommitView }) {
 
         {unresolvedOwner && (
           <Link
-            href={`/commit/${commit.id}/resolve`}
-            className="mt-3 flex items-center justify-between rounded-2xl bg-accent-soft px-4 py-3 text-sm font-semibold text-accent-strong"
+            href={`/commit/${commit.id}`}
+            className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm"
           >
-            How did it go? Resolve your commit →
+            <span className="text-ink-soft">
+              <span className="font-medium text-muted">deadline reached · </span>
+              did you do it?
+            </span>
+            <span className="font-semibold text-accent">→</span>
           </Link>
         )}
 
@@ -116,7 +120,7 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
     <article className="hw-note relative border-b border-border-soft px-4 py-4 sm:px-5">
       <div className="mb-3 flex items-center gap-2 text-[13px] font-medium text-success-strong">
         <PartyPopper className="h-4 w-4" />
-        {commit.author.name.split(" ")[0]} shipped a Commit
+        {commit.author.name.split(" ")[0]} shipped a commit
       </div>
 
       <CardHeader commit={commit} badge={<StatusBadge kind="shipped" className="hw-shipped" />} />
@@ -131,12 +135,6 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
           />
         </Link>
 
-        {commit.shipped_at && (
-          <div className="hw-shipdate ink-hand mt-2 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-[13px] font-semibold text-success-strong">
-            ✓ Shipped on {deadlineLabel(commit.shipped_at)}
-          </div>
-        )}
-
         {commit.ship?.text && (
           <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
             {commit.ship.text}
@@ -149,6 +147,18 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
             linkUrl={commit.ship.link_url}
           />
         )}
+
+        {/* the signature beat — said it, did it. */}
+        <div className="hw-shipdate mt-3 flex items-center gap-2">
+          <span className="ink-hand text-[15px] font-semibold text-success-strong">
+            said it. did it.
+          </span>
+          {commit.shipped_at && (
+            <span className="text-[12.5px] text-muted">
+              · {deadlineLabel(commit.shipped_at)}
+            </span>
+          )}
+        </div>
 
         <div className="mt-3.5">
           <CommitActions commit={commit} />

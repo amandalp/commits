@@ -17,7 +17,7 @@ export default async function OgImage({
 }: {
   params: { id: string };
 }) {
-  let text = "put it on the record";
+  let text = "";
   let deadline = new Date().toISOString();
   let name = "Someone";
   let shipped = false;
@@ -79,7 +79,7 @@ export default async function OgImage({
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: 4, color: "#78756c" }}>
-            {shipped ? "I COMMITTED TO" : "I'M GOING TO"}
+            {shipped ? "I SAID I'D" : "I'M GOING TO"}
           </div>
           <div
             style={{
@@ -103,7 +103,9 @@ export default async function OgImage({
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontSize: 30, fontWeight: 700, color: "#1b1a16" }}>{name}</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: "#6d5ae6" }}>Hold me to it →</div>
+          <div style={{ fontSize: 28, fontWeight: 700, color: shipped ? "#1f8a52" : "#6d5ae6" }}>
+            {shipped ? "said it. did it." : "Hold me to it →"}
+          </div>
         </div>
       </div>
     ),

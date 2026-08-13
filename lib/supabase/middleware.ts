@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PREFIXES = ["/login", "/auth", "/share", "/_next", "/favicon"];
+const PUBLIC_PREFIXES = ["/login", "/start", "/welcome", "/auth", "/share", "/_next", "/favicon"];
 
 /** Refreshes the Supabase session and gates authenticated routes. */
 export async function updateSession(request: NextRequest) {
@@ -37,6 +37,12 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
+    // Logged-out visitors see the marketing page at the root URL (rewrite keeps
+    // the address bar at "/"); other deep links route to sign-in.
+    if (path === "/") {
+      url.pathname = "/welcome";
+      return NextResponse.rewrite(url);
+    }
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }

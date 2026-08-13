@@ -50,9 +50,9 @@ export function ShipForm({
           <PartyPopper className="h-7 w-7 text-success" />
         </div>
         <h1 className="ink-hand mt-4 font-display text-[28px] font-bold text-ink">
-          You did it!
+          you did it. show us.
         </h1>
-        <p className="mt-1 text-muted">Ship your Commit.</p>
+        <p className="mt-1 text-muted">A message, proof, or nothing at all.</p>
       </div>
 
       <div className="mt-5 rounded-2xl border border-success-border bg-success-soft/50 p-4">
@@ -61,12 +61,12 @@ export function ShipForm({
 
       <div className="mt-5">
         <label className="mb-2 block text-[14px] font-medium text-muted">
-          Add an update (optional)
+          Say something (optional)
         </label>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value.slice(0, 1000))}
-          placeholder="What happened?"
+          placeholder="Guess what—I actually did it 😂"
           rows={3}
           className="w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] text-ink outline-none focus:border-accent"
         />
@@ -95,7 +95,7 @@ export function ShipForm({
         onClick={submit}
         loading={pending}
       >
-        Mark as Shipped
+        share the win
       </Button>
     </div>
   );

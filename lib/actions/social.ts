@@ -2,7 +2,60 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser, type ActionResult } from "./helpers";
-import type { Person } from "@/lib/types";
+import type { Person, PersonWithFollow } from "@/lib/types";
+
+/**
+ * People connected to `userId` by follows, most recent first, annotated with
+ * whether the viewer follows each one. `direction` picks which side of the
+ * relationship to list: "followers" = people who follow `userId`, "following"
+ * = people `userId` follows.
+ */
+export async function getFollowList(
+  userId: string,
+  direction: "followers" | "following"
+): Promise<PersonWithFollow[]> {
+  const { supabase, userId: viewerId } = await requireUser();
+
+  const selectCol = direction === "followers" ? "follower_id" : "following_id";
+  const matchCol = direction === "followers" ? "following_id" : "follower_id";
+
+  const { data: rows } = await supabase
+    .from("follows")
+    .select(`${selectCol}, created_at`)
+    .eq(matchCol, userId)
+    .order("created_at", { ascending: false });
+
+  const ids = (rows ?? []).map((r) => (r as Record<string, string>)[selectCol]);
+  if (!ids.length) return [];
+
+  const [{ data: profs }, { data: viewerFollows }] = await Promise.all([
+    supabase.from("profiles").select("id, name, username, avatar_url, bio").in("id", ids),
+    supabase.from("follows").select("following_id").eq("follower_id", viewerId).in("following_id", ids),
+  ]);
+
+  const followedByViewer = new Set(
+    (viewerFollows ?? []).map((r) => (r as { following_id: string }).following_id)
+  );
+  const byId = new Map(
+    (profs ?? []).map((p) => [(p as { id: string }).id, p as Record<string, unknown>])
+  );
+
+  return ids
+    .map((id) => byId.get(id))
+    .filter((p): p is Record<string, unknown> => Boolean(p))
+    .map((p) => {
+      const id = p.id as string;
+      return {
+        id,
+        name: (p.name as string) ?? "Someone",
+        username: (p.username as string) ?? "user",
+        avatar_url: (p.avatar_url as string | null) ?? null,
+        bio: (p.bio as string | null) ?? null,
+        is_following: followedByViewer.has(id),
+        is_self: id === viewerId,
+      };
+    });
+}
 
 /** Everyone who cheered a commit, most recent first. */
 export async function getCheerers(commitId: string): Promise<Person[]> {

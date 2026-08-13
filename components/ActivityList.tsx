@@ -29,7 +29,7 @@ function phrase(n: NotificationView): { verb: string; emoji?: string } {
     case "follow":
       return { verb: "followed you" };
     case "deadline":
-      return { verb: "is due soon" };
+      return { verb: "how’s it going?", emoji: "👋" };
     case "shipped":
       return { verb: "shipped a commit you follow", emoji: "🎉" };
     case "update":
@@ -116,9 +116,7 @@ function Row({ n }: { n: NotificationView }) {
       <div className="min-w-0 flex-1 pt-0.5">
         <p className="text-[14.5px] leading-snug text-ink">
           {n.type === "deadline" ? (
-            <>
-              <span className="font-semibold">Your commit</span> {verb}
-            </>
+            <span className="font-semibold">{verb}</span>
           ) : (
             <>
               <span className="font-semibold">{actorNames(n)}</span> {verb}

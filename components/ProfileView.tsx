@@ -3,6 +3,7 @@ import { MapPin, Link as LinkIcon, ListChecks } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { InstagramIcon, TikTokIcon, XIcon } from "./SocialIcons";
 import { FollowButton } from "./FollowButton";
+import { FollowStats } from "./FollowStats";
 import { EditProfileSheet } from "./EditProfileSheet";
 import { CommitCard, ShippedCard } from "./CommitCard";
 import { EmptyState, Button } from "./ui";
@@ -51,7 +52,14 @@ export function ProfileView({
 
         <div className="mt-3">
           <h1 className="text-[22px] font-bold text-ink">{profile.name}</h1>
-          <p className="text-[14px] text-muted">@{profile.username}</p>
+          <div className="flex items-center gap-2 text-[14px] text-muted">
+            <span>@{profile.username}</span>
+            {profile.location && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" /> {profile.location}
+              </span>
+            )}
+          </div>
         </div>
 
         {profile.bio && (
@@ -59,11 +67,6 @@ export function ProfileView({
         )}
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13.5px] text-muted">
-          {profile.location && (
-            <span className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" /> {profile.location}
-            </span>
-          )}
           {websiteHref && (
             <a
               href={websiteHref}
@@ -103,16 +106,12 @@ export function ProfileView({
           </div>
         )}
 
-        <div className="mt-3 flex gap-4 text-[13.5px]">
-          <span>
-            <span className="font-bold text-ink">{compact(profile.following)}</span>{" "}
-            <span className="text-muted">Following</span>
-          </span>
-          <span>
-            <span className="font-bold text-ink">{compact(profile.followers)}</span>{" "}
-            <span className="text-muted">Followers</span>
-          </span>
-        </div>
+        <FollowStats
+          userId={profile.id}
+          name={profile.name}
+          followers={profile.followers}
+          following={profile.following}
+        />
 
         <div className="mt-4 flex items-center gap-5 rounded-2xl border border-border bg-surface px-4 py-3">
           <Stat value={profile.commits} label="Commits" />

@@ -78,7 +78,7 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  let text = "put it on the record";
+  let text = "";
   let deadline = new Date().toISOString();
   let name = "Someone";
   let username = "someone";

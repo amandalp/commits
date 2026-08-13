@@ -26,9 +26,9 @@ export default async function ResolvePage({
       <TopBar variant="close" fallbackHref={`/commit/${id}`} />
       <div className="px-5 pb-10 pt-4">
         <h1 className="ink-hand font-display text-[30px] font-bold text-ink">
-          How did it go?
+          did you do it?
         </h1>
-        <p className="mt-2 text-[13px] font-medium text-muted">You committed to:</p>
+        <p className="mt-2 text-[13px] font-medium text-muted">You said you’d:</p>
         <div className="mt-3 rounded-3xl border border-border bg-surface p-5">
           <CommitStructure text={commit.text} deadline={commit.deadline} size="md" />
         </div>
@@ -43,7 +43,7 @@ export default async function ResolvePage({
             </span>
             <span>
               <span className="block text-lg font-bold text-ink">I did it</span>
-              <span className="block text-[14px] text-success-strong">Ship it!</span>
+              <span className="block text-[14px] text-success-strong">share the win</span>
             </span>
           </Link>
 

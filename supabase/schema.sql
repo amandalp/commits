@@ -352,26 +352,49 @@ create trigger on_auth_user_created after insert on auth.users
   for each row execute function handle_new_user();
 
 -- ---------------------------------------------------------------------------
---  Deadline notifications — call from pg_cron / a scheduled route.
---  Emits a 'deadline' notice once per commit due within the next 24h.
+--  Deadline nudges — call from pg_cron / a scheduled route (hourly).
+--  Prompts the creator "how's it going?" twice per commit:
+--    · ~12h BEFORE the deadline (the run-up)
+--    · ~12h AFTER  the deadline, if still unresolved (the gentle "did you do it?")
+--  Both are the owner-facing 'deadline' type (actor_id null). De-dup keys on
+--  whether an existing nudge was written before vs. after the deadline, so no
+--  extra column or enum value is needed.
 -- ---------------------------------------------------------------------------
 create or replace function generate_deadline_notifications() returns int
 language plpgsql security definer set search_path = public as $$
 declare c record; cnt int := 0;
 begin
+  -- ~12h before: the deadline is coming up.
   for c in
     select id, user_id from commits
     where status in ('active','overdue')
-      and deadline between now() and now() + interval '24 hours'
+      and deadline between now() and now() + interval '12 hours'
       and not exists (
         select 1 from notifications n
         where n.commit_id = commits.id and n.type = 'deadline'
-          and n.created_at > now() - interval '24 hours')
+          and n.created_at < commits.deadline)      -- no pre-deadline nudge yet
   loop
     insert into notifications(user_id, actor_id, commit_id, type)
     values (c.user_id, null, c.id, 'deadline');
     cnt := cnt + 1;
   end loop;
+
+  -- ~12h after: the deadline passed and it's still open.
+  for c in
+    select id, user_id from commits
+    where status in ('active','overdue')
+      and now() >= deadline + interval '12 hours'
+      and deadline > now() - interval '30 days'     -- don't wake ancient commits
+      and not exists (
+        select 1 from notifications n
+        where n.commit_id = commits.id and n.type = 'deadline'
+          and n.created_at >= commits.deadline)      -- no post-deadline nudge yet
+  loop
+    insert into notifications(user_id, actor_id, commit_id, type)
+    values (c.user_id, null, c.id, 'deadline');
+    cnt := cnt + 1;
+  end loop;
+
   return cnt;
 end $$;
 

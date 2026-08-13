@@ -13,9 +13,11 @@ export function CommitRow({ commit }: { commit: CommitView }) {
   const overdue = !shipped && !closed && cd.overdue;
 
   const meta = shipped
-    ? `Shipped ${deadlineLabel(commit.shipped_at ?? commit.deadline)}`
+    ? `said it. did it. · ${deadlineLabel(commit.shipped_at ?? commit.deadline)}`
     : closed
     ? `Closed`
+    : overdue
+    ? "did you do it?"
     : cd.label;
 
   return (
@@ -27,7 +29,11 @@ export function CommitRow({ commit }: { commit: CommitView }) {
         <div className="mb-1.5 flex items-center gap-2">
           {shipped && <StatusBadge kind="shipped" />}
           {closed && <StatusBadge kind="closed" />}
-          {overdue && <StatusBadge kind="overdue" />}
+          {overdue && (
+            <span className="inline-flex items-center rounded-full bg-cream-deep px-2.5 py-1 text-[10px] font-bold tracking-[0.08em] text-muted">
+              DEADLINE REACHED
+            </span>
+          )}
           {!shipped && !closed && !overdue && cd.dueSoon && (
             <StatusBadge kind="due-soon" />
           )}
@@ -39,7 +45,7 @@ export function CommitRow({ commit }: { commit: CommitView }) {
           tone={shipped ? "shipped" : closed ? "closed" : "active"}
         />
         <div className="mt-2 flex items-center gap-3 text-[13px] text-muted">
-          <span className={overdue ? "font-semibold text-warn" : ""}>{meta}</span>
+          <span className={overdue ? "font-semibold text-accent" : ""}>{meta}</span>
           {commit.cheer_count > 0 && <span>🙌 {compact(commit.cheer_count)}</span>}
           {commit.join_count > 0 && <span>{compact(commit.join_count)} joined</span>}
         </div>

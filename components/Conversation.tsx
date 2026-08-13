@@ -5,69 +5,134 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, ArrowUp } from "lucide-react";
 import { Avatar } from "./Avatar";
+import { ShipProof } from "./ShipProof";
 import { MentionText } from "./MentionText";
 import { useMentions, MentionMenu } from "./mentions";
 import { cn, timeAgo, compact } from "@/lib/utils";
 import { addComment, toggleCommentLike } from "@/lib/actions/social";
-import type { CommentView, Person } from "@/lib/types";
+import type { CommentView, UpdateView, Person } from "@/lib/types";
 
-export function Comments({
+/**
+ * One promise, one evolving conversation. Creator updates, the shipped
+ * outcome, and everyone's replies live in a single chronological thread —
+ * no separate "updates" vs "support" systems.
+ */
+type ThreadItem =
+  | { key: string; at: string; kind: "comment"; comment: CommentView }
+  | { key: string; at: string; kind: "update"; update: UpdateView };
+
+export function Conversation({
   commitId,
   viewer,
-  initialComments,
-  authorUsername,
+  comments,
+  updates,
+  ship,
+  authorId,
 }: {
   commitId: string;
-  viewer: Person;
-  initialComments: CommentView[];
-  authorUsername: string;
+  viewer: Person | null;
+  comments: CommentView[];
+  updates: UpdateView[];
+  ship: UpdateView | null;
+  authorId: string;
 }) {
   const router = useRouter();
-  const [sort, setSort] = useState<"newest" | "oldest">("newest");
 
-  // Render directly from server truth; router.refresh() re-supplies props.
-  const comments = initialComments;
-  const ordered = sort === "newest" ? comments : [...comments].reverse();
+  const items: ThreadItem[] = [
+    ...comments.map((c) => ({
+      key: `c-${c.id}`,
+      at: c.created_at,
+      kind: "comment" as const,
+      comment: c,
+    })),
+    ...[...updates, ...(ship ? [ship] : [])].map((u) => ({
+      key: `u-${u.id}`,
+      at: u.created_at,
+      kind: "update" as const,
+      update: u,
+    })),
+  ].sort((a, b) => (a.at < b.at ? 1 : -1)); // newest first
 
   return (
-    <section id="comments">
-      <div className="mb-3 flex items-center justify-between px-1">
-        <h2 className="text-[15px] font-bold text-ink">Support</h2>
-        {comments.length > 1 && (
-          <button
-            onClick={() => setSort((s) => (s === "newest" ? "oldest" : "newest"))}
-            className="text-[13px] font-medium text-muted hover:text-ink"
-          >
-            {sort === "newest" ? "Newest" : "Oldest"} ▾
-          </button>
-        )}
-      </div>
+    <section id="conversation">
+      {viewer && (
+        <Composer
+          commitId={commitId}
+          placeholder="say something…"
+          onPosted={() => router.refresh()}
+        />
+      )}
 
-      <Composer
-        commitId={commitId}
-        viewer={viewer}
-        placeholder={`cheer on ${authorUsername}…`}
-        onPosted={() => router.refresh()}
-      />
-
-      <div className="mt-4 space-y-4 pl-[7px]">
-        {ordered.length === 0 ? (
-          <p className="px-1 py-4 text-center text-sm text-muted">
-            Say something encouraging.
+      <div className="mt-5 space-y-5">
+        {items.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted">
+            Be the first to say something.
           </p>
         ) : (
-          ordered.map((c) => (
-            <CommentItem
-              key={c.id}
-              comment={c}
-              commitId={commitId}
-              viewer={viewer}
-              onChange={() => router.refresh()}
-            />
-          ))
+          items.map((item) =>
+            item.kind === "update" ? (
+              <UpdateItem key={item.key} update={item.update} isAuthor={item.update.author.id === authorId} />
+            ) : (
+              <CommentItem
+                key={item.key}
+                comment={item.comment}
+                commitId={commitId}
+                viewer={viewer}
+                onChange={() => router.refresh()}
+              />
+            )
+          )
         )}
       </div>
     </section>
+  );
+}
+
+/** A creator post in the thread — a progress update, or the shipped outcome. */
+function UpdateItem({ update, isAuthor }: { update: UpdateView; isAuthor: boolean }) {
+  const shipped = update.kind === "ship";
+  const label =
+    update.kind === "ship"
+      ? "said it. did it."
+      : update.kind === "not_yet"
+      ? "gave it more time"
+      : "shared an update";
+
+  return (
+    <div className="flex gap-3">
+      <Link href={`/u/${update.author.username}`} className="shrink-0">
+        <Avatar person={update.author} size="sm" />
+      </Link>
+      <div
+        className={cn(
+          "min-w-0 flex-1",
+          shipped && "rounded-2xl border border-success-border bg-success-soft/40 px-4 py-3"
+        )}
+      >
+        <div className="flex items-baseline gap-2">
+          <Link
+            href={`/u/${update.author.username}`}
+            className="text-sm font-semibold text-ink hover:underline"
+          >
+            @{update.author.username}
+          </Link>
+          <span
+            className={cn(
+              "text-[12px]",
+              shipped ? "font-semibold text-success-strong" : "text-muted"
+            )}
+          >
+            {isAuthor ? label : "replied"} · {timeAgo(update.created_at)}
+          </span>
+        </div>
+        {update.text && (
+          <p className="mt-0.5 whitespace-pre-wrap text-[15px] leading-snug text-ink-soft">
+            <MentionText text={update.text} />
+          </p>
+        )}
+        <ShipProof mediaUrl={update.media_url} linkUrl={update.link_url} />
+      </div>
+    </div>
   );
 }
 
@@ -80,7 +145,7 @@ function CommentItem({
 }: {
   comment: CommentView;
   commitId: string;
-  viewer: Person;
+  viewer: Person | null;
   onChange: () => void;
   isReply?: boolean;
 }) {
@@ -89,6 +154,7 @@ function CommentItem({
   const [replying, setReplying] = useState(false);
 
   function like() {
+    if (!viewer) return;
     const next = !liked;
     setLiked(next);
     setLikes((n) => n + (next ? 1 : -1));
@@ -125,6 +191,7 @@ function CommentItem({
         <div className="mt-1 flex items-center gap-4 pl-1.5">
           <button
             onClick={like}
+            disabled={!viewer}
             className={cn(
               "flex items-center gap-1 text-[12.5px] font-medium transition",
               liked ? "text-[#d1477a]" : "text-muted hover:text-ink"
@@ -136,7 +203,7 @@ function CommentItem({
             />
             {likes > 0 && compact(likes)}
           </button>
-          {!isReply && (
+          {!isReply && viewer && (
             <button
               onClick={() => setReplying((v) => !v)}
               className="text-[12.5px] font-medium text-muted hover:text-ink"
@@ -146,14 +213,12 @@ function CommentItem({
           )}
         </div>
 
-        {replying && (
+        {replying && viewer && (
           <div className="mt-2">
             <Composer
               commitId={commitId}
-              viewer={viewer}
               parentCommentId={comment.id}
               placeholder={`Reply to ${comment.author.name.split(" ")[0]}…`}
-              compact
               onPosted={() => {
                 setReplying(false);
                 onChange();
@@ -183,17 +248,13 @@ function CommentItem({
 
 function Composer({
   commitId,
-  viewer,
   parentCommentId,
-  placeholder = "Send a comment…",
-  compact: isCompact,
+  placeholder = "say something…",
   onPosted,
 }: {
   commitId: string;
-  viewer: Person;
   parentCommentId?: string;
   placeholder?: string;
-  compact?: boolean;
   onPosted: () => void;
 }) {
   const [text, setText] = useState("");
@@ -214,13 +275,7 @@ function Composer({
 
   return (
     <div className="relative">
-      <div
-        className={cn(
-          "flex items-center gap-2.5 rounded-full border border-border bg-cream-deep pr-1.5",
-          isCompact ? "pl-4" : "pl-1.5"
-        )}
-      >
-        {!isCompact && <Avatar person={viewer} size="sm" />}
+      <div className="flex items-center gap-2.5 rounded-full border border-border bg-cream-deep px-4 pr-1.5">
         <input
           ref={ref}
           value={text}
