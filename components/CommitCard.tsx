@@ -92,18 +92,19 @@ export function CommitCard({ commit }: { commit: CommitView }) {
           />
         </Link>
 
-        {unresolvedOwner ? (
+        {unresolvedOwner && (
           <Link
             href={`/commit/${commit.id}/resolve`}
             className="mt-3 flex items-center justify-between rounded-2xl bg-accent-soft px-4 py-3 text-sm font-semibold text-accent-strong"
           >
             How did it go? Resolve your commit →
           </Link>
-        ) : (
-          <div className="mt-3.5">
-            <CommitActions commit={commit} />
-          </div>
         )}
+
+        {/* Every post carries the same heart · comment · send row. */}
+        <div className="mt-3.5">
+          <CommitActions commit={commit} />
+        </div>
       </div>
     </article>
   );

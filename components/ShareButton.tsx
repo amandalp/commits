@@ -46,7 +46,10 @@ export function ShareButton({
     const ac = new AbortController();
     (async () => {
       try {
-        const res = await fetch(`/share/${commit.id}/story`, { signal: ac.signal });
+        const res = await fetch(`/share/${commit.id}/story`, {
+          signal: ac.signal,
+          cache: "no-store",
+        });
         if (!res.ok) return;
         const blob = await res.blob();
         blobRef.current = blob;

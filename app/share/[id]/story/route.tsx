@@ -230,7 +230,7 @@ export async function GET(
           </div>
 
           <div style={{ display: "flex", fontFamily: "Inter", fontSize: 30, color: MUTED, marginTop: 56 }}>
-            trycommits.co
+            commitsapp.co
           </div>
         </div>
       </div>

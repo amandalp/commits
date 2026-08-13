@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Heart, ArrowUp } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { MentionText } from "./MentionText";
+import { useMentions, MentionMenu } from "./mentions";
 import { cn, timeAgo, compact } from "@/lib/utils";
 import { addComment, toggleCommentLike } from "@/lib/actions/social";
 import type { CommentView, Person } from "@/lib/types";
@@ -45,14 +46,14 @@ export function Comments({
       <Composer
         commitId={commitId}
         viewer={viewer}
-        placeholder={`share support with ${authorUsername}…`}
+        placeholder={`cheer on ${authorUsername}…`}
         onPosted={() => router.refresh()}
       />
 
       <div className="mt-4 space-y-4 pl-[7px]">
         {ordered.length === 0 ? (
           <p className="px-1 py-4 text-center text-sm text-muted">
-            No comments yet. Say something encouraging.
+            Say something encouraging.
           </p>
         ) : (
           ordered.map((c) => (
@@ -198,6 +199,7 @@ function Composer({
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
+  const mentions = useMentions({ elRef: ref, value: text, onValueChange: setText });
 
   async function submit() {
     if (!text.trim() || pending) return;
@@ -211,34 +213,50 @@ function Composer({
   }
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2.5 rounded-full border border-border bg-cream-deep pr-1.5",
-        isCompact ? "pl-4" : "pl-1.5"
-      )}
-    >
-      {!isCompact && <Avatar person={viewer} size="sm" />}
-      <input
-        ref={ref}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            submit();
-          }
-        }}
-        placeholder={placeholder}
-        className="flex-1 bg-transparent py-2.5 text-[15px] text-ink outline-none placeholder:text-faint"
-      />
-      <button
-        onClick={submit}
-        disabled={!text.trim() || pending}
-        aria-label="Send"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white transition disabled:opacity-30"
+    <div className="relative">
+      <div
+        className={cn(
+          "flex items-center gap-2.5 rounded-full border border-border bg-cream-deep pr-1.5",
+          isCompact ? "pl-4" : "pl-1.5"
+        )}
       >
-        <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
-      </button>
+        {!isCompact && <Avatar person={viewer} size="sm" />}
+        <input
+          ref={ref}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            mentions.detect();
+          }}
+          onKeyUp={mentions.detect}
+          onClick={mentions.detect}
+          onKeyDown={(e) => {
+            if (mentions.onKeyDown(e)) return;
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          onBlur={mentions.close}
+          placeholder={placeholder}
+          className="flex-1 bg-transparent py-2.5 text-[15px] text-ink outline-none placeholder:text-faint"
+        />
+        <button
+          onClick={submit}
+          disabled={!text.trim() || pending}
+          aria-label="Send"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white transition disabled:opacity-30"
+        >
+          <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
+        </button>
+      </div>
+      {mentions.open && (
+        <MentionMenu
+          items={mentions.items}
+          active={mentions.active}
+          onChoose={mentions.choose}
+        />
+      )}
     </div>
   );
 }

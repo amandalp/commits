@@ -7,7 +7,6 @@ import { TopBar } from "@/components/TopBar";
 import { Avatar, AvatarStack } from "@/components/Avatar";
 import { CommitStructure } from "@/components/CommitStructure";
 import { CommitActions } from "@/components/CommitActions";
-import { CheerCount } from "@/components/CheerCount";
 import { OwnerPanel } from "@/components/OwnerPanel";
 import { Comments } from "@/components/Comments";
 import { ShipProof } from "@/components/ShipProof";
@@ -152,38 +151,29 @@ export default async function CommitDetailPage({
           </div>
         )}
 
-        {/* social summary */}
-        <div className="mt-4 flex items-center gap-4 text-[14px] text-muted">
-          <CheerCount
-            commitId={commit.id}
-            initialCheered={commit.viewer_cheered}
-            initialCount={commit.cheer_count}
-          />
+        {/* actions — the same heart · comment · send row everywhere, with the
+            joined stack and deadline alongside it. */}
+        <div className="mt-4 flex items-center gap-4">
+          <CommitActions commit={commit} />
           {commit.join_count > 0 && (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 text-[14px] text-muted">
               <AvatarStack people={commit.joiners} />
               <span>{compact(commit.join_count)} joined</span>
             </span>
           )}
           {!shipped && !closed && (
-            <span className="ml-auto text-[13px]">{deadlineFull(commit.deadline)}</span>
+            <span className="ml-auto text-[13px] text-muted">
+              {deadlineFull(commit.deadline)}
+            </span>
           )}
         </div>
 
-        {/* primary actions */}
-        <div className="mt-4">
-          {commit.is_owner ? (
-            !shipped && !closed ? (
-              <OwnerPanel commit={commit} />
-            ) : shipped ? (
-              <div className="rounded-2xl border border-success-border bg-success-soft px-4 py-3 text-[14px] font-semibold text-success-strong">
-                🎉 You shipped this. Nicely done.
-              </div>
-            ) : null
-          ) : (
-            <CommitActions commit={commit} />
-          )}
-        </div>
+        {/* owners keep the ship / not-yet controls while the commit is live */}
+        {commit.is_owner && !shipped && !closed && (
+          <div className="mt-4">
+            <OwnerPanel commit={commit} />
+          </div>
+        )}
 
         {/* joiners */}
         {joiners.length > 0 && (
