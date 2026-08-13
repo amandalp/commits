@@ -18,21 +18,25 @@ const caveat = Caveat({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://commitsapp.co";
 
+const homeTitle = "See what people are committing to";
+const homeDescription =
+  "Social accountability without the shame. Share your goals, cheer each other on, and actually follow through.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Commits — Commit out loud",
-  description: "For everything you keep saying you’re going to do.",
+  title: homeTitle,
+  description: homeDescription,
   openGraph: {
-    title: "Commits — Commit out loud",
-    description: "For everything you keep saying you’re going to do.",
+    title: homeTitle,
+    description: homeDescription,
     url: "/",
     siteName: "Commits",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Commits — Commit out loud",
-    description: "For everything you keep saying you’re going to do.",
+    title: homeTitle,
+    description: homeDescription,
   },
 };
 

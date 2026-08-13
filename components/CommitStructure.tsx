@@ -54,7 +54,7 @@ export function CommitStructure({
       </span>
       <span
         className={cn(
-          "commit-hw ink-hand hw-underline inline-block font-bold text-ink",
+          "commit-hw ink-hand hw-underline inline font-bold text-ink",
           TEXT_SIZE[size],
           tone === "closed" && "text-ink-soft"
         )}
@@ -65,7 +65,7 @@ export function CommitStructure({
         <span className="ink-hand-light text-muted">by </span>
         <span
           className={cn(
-            "ink-hand-light inline-block",
+            "ink-hand-light inline",
             tone === "active" ? "hw-underline-accent text-accent" : "text-muted"
           )}
         >

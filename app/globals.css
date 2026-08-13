@@ -230,8 +230,12 @@ button,
   font-weight: 700;
 }
 
-/* Per-line hand-drawn underline behind the commitment text. */
+/* Per-line hand-drawn underline behind the commitment text. box-decoration-break
+   paints the background per line fragment, so each wrapped line is underlined
+   only under its own text (not the full column width). Requires display:inline. */
 :root[data-style="handwritten"] .hw-underline {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   line-height: 1.62em;
   padding-bottom: 0.04em;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 46' preserveAspectRatio='none'%3E%3Cpath d='M3 37 C 70 31 130 41 300 35' fill='none' stroke='%231b1a16' stroke-width='2.4' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E");
@@ -241,6 +245,8 @@ button,
 }
 /* Deadline underline uses the accent stroke. */
 :root[data-style="handwritten"] .hw-underline-accent {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   line-height: 1.5em;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 46' preserveAspectRatio='none'%3E%3Cpath d='M3 37 C 70 31 130 41 300 35' fill='none' stroke='%236d5ae6' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: repeat-y;
