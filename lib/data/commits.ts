@@ -99,6 +99,13 @@ export async function enrichCommits(
     cheerersByCommit.set(c.commit_id, list);
   }
 
+  const watchersByCommit = new Map<string, string[]>();
+  for (const w of watches) {
+    const list = watchersByCommit.get(w.commit_id) ?? [];
+    if (list.length < AVATAR_STACK) list.push(w.user_id);
+    watchersByCommit.set(w.commit_id, list);
+  }
+
   // People in the loop, oldest first (the order the author added them).
   const loopedInByCommit = new Map<string, string[]>();
   for (const l of [...loopIns].sort((a, b) =>
@@ -130,6 +137,7 @@ export async function enrichCommits(
   for (const p of parents) profileIds.add(p.user_id);
   for (const list of cheerersByCommit.values()) list.forEach((id) => profileIds.add(id));
   for (const list of joinersByCommit.values()) list.forEach((id) => profileIds.add(id));
+  for (const list of watchersByCommit.values()) list.forEach((id) => profileIds.add(id));
   for (const list of loopedInByCommit.values()) list.forEach((id) => profileIds.add(id));
 
   const { data: profs } = profileIds.size
@@ -195,6 +203,7 @@ export async function enrichCommits(
       is_owner: r.user_id === viewerId,
       cheerers: (cheerersByCommit.get(r.id) ?? []).map(person),
       joiners: (joinersByCommit.get(r.id) ?? []).map(person),
+      watchers: (watchersByCommit.get(r.id) ?? []).map(person),
       looped_in: (loopedInByCommit.get(r.id) ?? []).map(person),
       ship: shipView,
     };

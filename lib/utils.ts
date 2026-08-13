@@ -37,6 +37,15 @@ export function deadlineLabel(iso: string): string {
   });
 }
 
+/** "August 27, 6:00 PM" — the commitment deadline with its time. */
+export function deadlineLabelTime(iso: string): string {
+  const time = new Date(iso).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${deadlineLabel(iso)}, ${time}`;
+}
+
 /** "Tuesday, Aug 27 at 6:00 PM" — full deadline for detail/progress. */
 export function deadlineFull(iso: string): string {
   const d = new Date(iso);

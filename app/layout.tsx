@@ -16,14 +16,23 @@ const caveat = Caveat({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://commitsapp.co";
+
 export const metadata: Metadata = {
-  title: "Commits",
-  description:
-    "I'm going to [do something] by [deadline]. Commit publicly, get cheered on, and ship it.",
+  metadataBase: new URL(siteUrl),
+  title: "Commits — Commit out loud",
+  description: "For everything you keep saying you’re going to do.",
   openGraph: {
-    title: "Commits",
-    description: "Put your commitments on the record.",
+    title: "Commits — Commit out loud",
+    description: "For everything you keep saying you’re going to do.",
+    url: "/",
+    siteName: "Commits",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Commits — Commit out loud",
+    description: "For everything you keep saying you’re going to do.",
   },
 };
 

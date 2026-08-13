@@ -1,7 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PREFIXES = ["/login", "/start", "/welcome", "/auth", "/share", "/_next", "/favicon"];
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/start",
+  "/welcome",
+  "/auth",
+  "/share",
+  "/_next",
+  "/favicon",
+  // Metadata image routes generated from app/opengraph-image + twitter-image.
+  // Crawlers are always logged out, so these must never redirect.
+  "/opengraph-image",
+  "/twitter-image",
+];
 
 /** Refreshes the Supabase session and gates authenticated routes. */
 export async function updateSession(request: NextRequest) {

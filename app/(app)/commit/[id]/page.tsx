@@ -7,13 +7,14 @@ import { TopBar } from "@/components/TopBar";
 import { Avatar, AvatarStack } from "@/components/Avatar";
 import { CommitStructure } from "@/components/CommitStructure";
 import { CommitActions } from "@/components/CommitActions";
+import { WatchingProof } from "@/components/WatchingProof";
 import { OwnerComposer } from "@/components/OwnerComposer";
 import { Conversation } from "@/components/Conversation";
 import { MediaGallery } from "@/components/MediaGallery";
 import { CommitMenu } from "@/components/CommitMenu";
 import { MentionText } from "@/components/MentionText";
 import { StatusBadge } from "@/components/ui";
-import { timeAgo, deadlineLabel, deadlineFull, compact } from "@/lib/utils";
+import { timeAgo, deadlineLabel, compact } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -48,16 +49,14 @@ export default async function CommitDetailPage({
           <Link href={`/u/${commit.author.username}`}>
             <Avatar person={commit.author} size="md" />
           </Link>
-          <div className="flex min-w-0 flex-1 items-baseline gap-2">
+          <div className="min-w-0 flex-1">
             <Link
               href={`/u/${commit.author.username}`}
-              className="truncate font-semibold text-ink hover:underline"
+              className="block truncate font-semibold text-ink hover:underline"
             >
-              {commit.author.name}
+              @{commit.author.username}
             </Link>
-            <span className="shrink-0 text-[13px] text-faint">
-              committed {timeAgo(commit.created_at)}
-            </span>
+            <div className="text-[13px] text-muted">committed {timeAgo(commit.created_at)}</div>
           </div>
           {(shipped || closed) && (
             <StatusBadge kind={shipped ? "shipped" : "closed"} />
@@ -93,7 +92,7 @@ export default async function CommitDetailPage({
             text={commit.text}
             deadline={commit.deadline}
             tone={shipped ? "shipped" : closed ? "closed" : "active"}
-            hero
+            size="lg"
           />
 
           {shipped && commit.shipped_at && (
@@ -146,11 +145,7 @@ export default async function CommitDetailPage({
               <span>{compact(commit.join_count)} joined</span>
             </span>
           )}
-          {!shipped && !closed && (
-            <span className="ml-auto text-[13px] text-muted">
-              {deadlineFull(commit.deadline)}
-            </span>
-          )}
+          <WatchingProof commit={commit} className="ml-auto" />
         </div>
 
         {/* the creator's control, directly beneath the promise */}

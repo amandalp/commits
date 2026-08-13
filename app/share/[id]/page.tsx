@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ShareCard } from "@/components/ShareCard";
 import { Button } from "@/components/ui";
+import { deadlineLabel } from "@/lib/utils";
 import type { Person } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -37,14 +38,33 @@ export async function generateMetadata({
   const { id } = await params;
   const c = await getPublic(id);
   if (!c) return { title: "Commits" };
+
   const shipped = c.status === "shipped";
+  const name = c.author.name;
+  const date = deadlineLabel(c.deadline);
+
+  // Generic they/them keeps the copy correct for every author — we don't
+  // store anyone's pronouns, and guessing from a name would misgender people.
+  const title = shipped ? `${name} did it` : `${name} is committing out loud`;
+  const description = shipped
+    ? `${name} said they’d ${c.text} by ${date} — and they did. See what happened.`
+    : `${name} is going to ${c.text} by ${date}. Hold them to it — or commit to something of your own.`;
+
   return {
-    title: shipped
-      ? `${c.author.name}: I said I’d ${c.text} — said it, did it.`
-      : `${c.author.name}: I'm going to ${c.text}`,
-    description: shipped
-      ? "Said it. Did it. See the whole story on Commits →"
-      : "Put your commitments on the record. Hold me to it →",
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/share/${c.id}`,
+      siteName: "Commits",
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
   };
 }
 

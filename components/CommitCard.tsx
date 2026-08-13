@@ -5,6 +5,7 @@ import { PartyPopper } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { CommitStructure } from "./CommitStructure";
 import { CommitActions } from "./CommitActions";
+import { WatchingProof } from "./WatchingProof";
 import { StatusBadge } from "./ui";
 import { ShipProof } from "./ShipProof";
 import { timeAgo, deadlineLabel, countdown } from "@/lib/utils";
@@ -30,11 +31,9 @@ function CardHeader({
           >
             @{commit.author.username}
           </Link>
-          <span className="shrink-0 text-[13px] text-faint">
-            {timeAgo(commit.created_at)}
-          </span>
           {badge}
         </div>
+        <div className="text-[13px] text-muted">committed {timeAgo(commit.created_at)}</div>
         <JoinedFrom commit={commit} />
       </div>
     </div>
@@ -82,12 +81,12 @@ export function CommitCard({ commit }: { commit: CommitView }) {
         }
       />
 
-      <div className="mt-3 pl-[calc(2.75rem+0.75rem)]">
+      <div className="mt-3.5">
         <Link href={`/commit/${commit.id}`} className="block">
           <CommitStructure
             text={commit.text}
             deadline={commit.deadline}
-            size="sm"
+            size="md"
             tone={commit.status === "closed" ? "closed" : "active"}
           />
         </Link>
@@ -105,9 +104,10 @@ export function CommitCard({ commit }: { commit: CommitView }) {
           </Link>
         )}
 
-        {/* Every post carries the same heart · comment · send row. */}
-        <div className="mt-3.5">
+        {/* heart · comment · send, with the watching stack trailing right. */}
+        <div className="mt-3.5 flex items-center gap-3">
           <CommitActions commit={commit} />
+          <WatchingProof commit={commit} className="ml-auto" />
         </div>
       </div>
     </article>
@@ -125,12 +125,12 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
 
       <CardHeader commit={commit} badge={<StatusBadge kind="shipped" className="hw-shipped" />} />
 
-      <div className="mt-3 pl-[calc(2.75rem+0.75rem)]">
+      <div className="mt-3.5">
         <Link href={`/commit/${commit.id}`} className="block">
           <CommitStructure
             text={commit.text}
             deadline={commit.deadline}
-            size="sm"
+            size="md"
             tone="shipped"
           />
         </Link>
@@ -160,8 +160,9 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
           )}
         </div>
 
-        <div className="mt-3.5">
+        <div className="mt-3.5 flex items-center gap-3">
           <CommitActions commit={commit} />
+          <WatchingProof commit={commit} className="ml-auto" />
         </div>
       </div>
     </article>

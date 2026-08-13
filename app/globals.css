@@ -219,6 +219,13 @@ button,
   letter-spacing: 0;
   font-weight: 600;
 }
+/* Lighter marker weight for connective text ("I'm going to", "by <date>"),
+   so only the commitment itself carries weight. */
+:root[data-style="handwritten"] .ink-hand-light {
+  font-family: var(--font-hand), var(--font-sans);
+  letter-spacing: 0;
+  font-weight: 400;
+}
 :root[data-style="handwritten"] .commit-hw {
   font-weight: 700;
 }
