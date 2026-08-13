@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Heart, MessageCircle, Send } from "lucide-react";
 
 const HAND = "var(--font-hand), cursive";
 const ACCENT = "#6d5ae6";
+const LIKE = "#e0245e";
 
 /** A hand-drawn purple accent underline; width via className (e.g. w-40). */
 function Underline({ className }: { className?: string }) {
@@ -22,7 +23,10 @@ type DemoCard = {
   by: string;
   tilt: string;
   z: string;
-  extra: React.ReactNode;
+  cheers: number;
+  comments: number;
+  watching: number;
+  watchers?: string[];
   shipped?: boolean;
 };
 
@@ -36,7 +40,9 @@ const CARDS: DemoCard[] = [
     by: "October 4",
     tilt: "-rotate-[4deg]",
     z: "z-10",
-    extra: <span>🙌 12 cheering</span>,
+    cheers: 12,
+    comments: 0,
+    watching: 0,
   },
   {
     name: "Priya Nair",
@@ -47,13 +53,10 @@ const CARDS: DemoCard[] = [
     by: "August 28",
     tilt: "rotate-[1deg]",
     z: "z-20",
-    extra: (
-      <>
-        <span>🙌 24 cheering</span>
-        <span>👀 3 watching</span>
-        <span>💬 2</span>
-      </>
-    ),
+    cheers: 24,
+    comments: 2,
+    watching: 3,
+    watchers: ["/demo/p2.jpg", "/demo/p3.jpg", "/demo/p4.jpg"],
   },
   {
     name: "Alex Martinez",
@@ -64,7 +67,9 @@ const CARDS: DemoCard[] = [
     by: "Friday",
     tilt: "rotate-[5deg]",
     z: "z-0",
-    extra: <span>7 cheering</span>,
+    cheers: 7,
+    comments: 0,
+    watching: 0,
     shipped: true,
   },
 ];
@@ -81,7 +86,17 @@ function CommitCardMock({ card }: { card: DemoCard }) {
           <div className="truncate text-[14px] font-bold text-ink">{card.name}</div>
           <div className="truncate text-[12.5px] text-muted">@{card.handle}</div>
         </div>
-        <span className="text-[12.5px] text-faint">{card.ago}</span>
+        <div className="flex shrink-0 items-center gap-2">
+          {card.shipped && (
+            <span
+              style={{ fontFamily: HAND }}
+              className="rounded-full border border-success/40 px-2 py-0.5 text-[12px] text-success-strong"
+            >
+              shipped
+            </span>
+          )}
+          <span className="text-[12.5px] text-faint">{card.ago}</span>
+        </div>
       </div>
 
       <p style={{ fontFamily: HAND }} className="mt-4 text-[26px] leading-[1.15] text-ink">
@@ -95,16 +110,35 @@ function CommitCardMock({ card }: { card: DemoCard }) {
         </span>
       </div>
 
-      <div className="mt-4 flex items-center gap-3 text-[12.5px] text-muted">
-        {card.shipped ? (
-          <span
-            style={{ fontFamily: HAND }}
-            className="rounded-full border border-success/40 px-3 py-0.5 text-[15px] text-success-strong"
-          >
-            shipped
+      <div className="mt-4 flex items-center gap-3 text-[13px] text-muted">
+        <span className="flex items-center gap-1.5 font-medium">
+          <Heart className="h-[17px] w-[17px]" style={{ fill: LIKE, color: LIKE }} />
+          {card.cheers}
+        </span>
+        {card.comments > 0 && (
+          <span className="flex items-center gap-1.5 font-medium">
+            <MessageCircle className="h-[17px] w-[17px]" strokeWidth={2} />
+            {card.comments}
           </span>
-        ) : (
-          card.extra
+        )}
+        <Send className="h-[16px] w-[16px]" strokeWidth={2} />
+        {card.watching > 0 && (
+          <span className="ml-auto flex items-center gap-1.5">
+            {card.watchers && (
+              <span className="flex -space-x-1.5">
+                {card.watchers.map((src) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={src}
+                    src={src}
+                    alt=""
+                    className="h-5 w-5 rounded-full object-cover ring-2 ring-surface"
+                  />
+                ))}
+              </span>
+            )}
+            {card.watching} watching
+          </span>
         )}
       </div>
     </div>
