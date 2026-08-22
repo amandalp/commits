@@ -41,6 +41,7 @@ export function CommitRow({ commit }: { commit: CommitView }) {
         <CommitStructure
           text={commit.text}
           deadline={commit.deadline}
+          duration={commit.duration}
           size="sm"
           tone={shipped ? "shipped" : closed ? "closed" : "active"}
         />

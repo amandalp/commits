@@ -2,6 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser, type ActionResult } from "./helpers";
+import type { Duration, DurationUnit } from "@/lib/types";
+
+const DURATION_UNITS: DurationUnit[] = [
+  "hours",
+  "days",
+  "weeks",
+  "months",
+  "years",
+];
 
 type CreateInput = {
   text: string;
@@ -9,6 +18,8 @@ type CreateInput = {
   mediaUrl?: string | null;
   mediaUrls?: string[] | null;
   deadline: string; // ISO
+  /** Set when the commit is framed as "for 30 days"; the deadline is its end. */
+  duration?: Duration | null;
   parentCommitId?: string | null;
   /** People to put "in the loop" — notified they were CC'd on this commit. */
   loopInIds?: string[] | null;
@@ -27,6 +38,18 @@ export async function createCommit(
 
   const mediaUrls = (input.mediaUrls ?? []).filter(Boolean);
 
+  // A duration is a framing, not a second source of truth — reject anything
+  // out of range rather than storing a label the deadline doesn't match.
+  const duration = input.duration ?? null;
+  if (
+    duration &&
+    (!DURATION_UNITS.includes(duration.unit) ||
+      !Number.isInteger(duration.amount) ||
+      duration.amount < 1 ||
+      duration.amount > 365)
+  )
+    return { ok: false, error: "Pick how long you're committing for." };
+
   const { data, error } = await supabase
     .from("commits")
     .insert({
@@ -38,6 +61,8 @@ export async function createCommit(
       media_urls: mediaUrls,
       deadline: when.toISOString(),
       original_deadline: when.toISOString(),
+      duration_amount: duration?.amount ?? null,
+      duration_unit: duration?.unit ?? null,
       parent_commit_id: input.parentCommitId ?? null,
       status: "active",
     })

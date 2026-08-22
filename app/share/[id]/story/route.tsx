@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
-import { deadlineLabel } from "@/lib/utils";
+import { deadlineLabel, durationLabel } from "@/lib/utils";
+import type { Duration, DurationUnit } from "@/lib/types";
 import {
   CREAM,
   INK,
@@ -28,6 +29,7 @@ export async function GET(
   let username = "someone";
   let avatar: string | null = null;
   let authorId = id;
+  let duration: Duration | null = null;
 
   try {
     const supabase = createClient(
@@ -37,13 +39,18 @@ export async function GET(
     const { data } = await supabase
       .from("commits")
       .select(
-        "text, deadline, author:profiles!commits_user_id_fkey(id, name, username, avatar_url)"
+        "text, deadline, duration_amount, duration_unit, author:profiles!commits_user_id_fkey(id, name, username, avatar_url)"
       )
       .eq("id", id)
       .maybeSingle();
     if (data) {
       text = data.text as string;
       deadline = data.deadline as string;
+      if (data.duration_amount && data.duration_unit)
+        duration = {
+          amount: data.duration_amount as number,
+          unit: data.duration_unit as DurationUnit,
+        };
       const a = (
         Array.isArray(data.author) ? data.author[0] : data.author
       ) as {
@@ -60,6 +67,9 @@ export async function GET(
   } catch {
     /* fall back to defaults */
   }
+
+  // "for 30 days" when the commit was framed as a span of time, else the date.
+  const when = duration ? durationLabel(duration) : deadlineLabel(deadline);
 
   const fonts = await loadShareFonts();
 
@@ -113,10 +123,10 @@ export async function GET(
             {text}
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", marginTop: 24, fontSize: 132, lineHeight: 1 }}>
-            <span style={{ marginRight: 22 }}>by</span>
+            <span style={{ marginRight: 22 }}>{duration ? "for" : "by"}</span>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ color: ACCENT }}>{deadlineLabel(deadline)}</span>
-              <Underline width={Math.min(560, 190 + deadlineLabel(deadline).length * 44)} y={-14} />
+              <span style={{ color: ACCENT }}>{when}</span>
+              <Underline width={Math.min(560, 190 + when.length * 44)} y={-14} />
             </div>
           </div>
         </div>

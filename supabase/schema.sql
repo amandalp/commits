@@ -18,6 +18,12 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
+  create type duration_unit as enum ('hours', 'days', 'weeks', 'months', 'years');
+exception when duplicate_object then null; end $$;
+-- backfill for the enum created before short commitments existed
+alter type duration_unit add value if not exists 'hours' before 'days';
+
+do $$ begin
   create type notification_type as enum (
     'cheer', 'watch', 'join', 'comment', 'comment_reply',
     'follow', 'deadline', 'shipped', 'update', 'not_yet', 'loop_in', 'mention'
@@ -55,6 +61,10 @@ create table if not exists commits (
   media_url         text,
   media_urls        text[] not null default '{}',
   deadline          timestamptz not null,
+  -- How the commitment was framed: null = "by <deadline>", set = "for 30 days"
+  -- (the deadline is derived from the duration at create time).
+  duration_amount   int check (duration_amount is null or duration_amount between 1 and 365),
+  duration_unit     duration_unit,
   status            commit_status not null default 'active',
   original_deadline timestamptz not null,
   parent_commit_id  uuid references commits(id) on delete set null,
@@ -70,6 +80,14 @@ alter table commits add column if not exists media_urls text[] not null default 
 update commits
   set media_urls = array[media_url]
   where media_url is not null and (media_urls is null or media_urls = '{}');
+-- commits can be framed as a duration ("for 30 days") instead of a date.
+alter table commits add column if not exists duration_amount int
+  check (duration_amount is null or duration_amount between 1 and 365);
+alter table commits add column if not exists duration_unit duration_unit;
+do $$ begin
+  alter table commits add constraint commits_duration_pair
+    check ((duration_amount is null) = (duration_unit is null));
+exception when duplicate_object then null; end $$;
 create index if not exists commits_user_idx    on commits(user_id, created_at desc);
 create index if not exists commits_created_idx  on commits(created_at desc);
 create index if not exists commits_parent_idx   on commits(parent_commit_id);

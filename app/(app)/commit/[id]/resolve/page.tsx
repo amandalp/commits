@@ -30,7 +30,12 @@ export default async function ResolvePage({
         </h1>
         <p className="mt-2 text-[13px] font-medium text-muted">You said you’d:</p>
         <div className="mt-3 rounded-3xl border border-border bg-surface p-5">
-          <CommitStructure text={commit.text} deadline={commit.deadline} size="md" />
+          <CommitStructure
+            text={commit.text}
+            deadline={commit.deadline}
+            duration={commit.duration}
+            size="md"
+          />
         </div>
 
         <div className="mt-6 space-y-3">

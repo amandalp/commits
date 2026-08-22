@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
-import { deadlineLabel } from "@/lib/utils";
+import { deadlineLabel, durationLabel } from "@/lib/utils";
+import type { Duration, DurationUnit } from "@/lib/types";
 import {
   CREAM,
   INK,
@@ -37,6 +38,7 @@ export default async function CommitOgImage({
   let avatar: string | null = null;
   let authorId = id;
   let shipped = false;
+  let duration: Duration | null = null;
 
   try {
     const supabase = createClient(
@@ -46,7 +48,7 @@ export default async function CommitOgImage({
     const { data } = await supabase
       .from("commits")
       .select(
-        "text, deadline, status, author:profiles!commits_user_id_fkey(id, name, username, avatar_url)"
+        "text, deadline, duration_amount, duration_unit, status, author:profiles!commits_user_id_fkey(id, name, username, avatar_url)"
       )
       .eq("id", id)
       .maybeSingle();
@@ -54,6 +56,11 @@ export default async function CommitOgImage({
       text = data.text as string;
       deadline = data.deadline as string;
       shipped = data.status === "shipped";
+      if (data.duration_amount && data.duration_unit)
+        duration = {
+          amount: data.duration_amount as number,
+          unit: data.duration_unit as DurationUnit,
+        };
       const a = (
         Array.isArray(data.author) ? data.author[0] : data.author
       ) as {
@@ -71,7 +78,9 @@ export default async function CommitOgImage({
     /* fall back to defaults */
   }
 
-  const date = deadlineLabel(deadline);
+  // A duration commit reads "for 30 days" where a dated one reads "by Aug 27".
+  const lead = duration ? "for" : "by";
+  const date = duration ? durationLabel(duration) : deadlineLabel(deadline);
   const fonts = await loadShareFonts();
 
   return new ImageResponse(
@@ -135,7 +144,7 @@ export default async function CommitOgImage({
             {text}
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", marginTop: 16, fontSize: 60 }}>
-            <span style={{ marginRight: 16 }}>by</span>
+            <span style={{ marginRight: 16 }}>{lead}</span>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ color: ACCENT }}>{date}</span>
               <Underline width={Math.min(420, 130 + date.length * 30)} y={-12} />

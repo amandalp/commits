@@ -8,15 +8,18 @@ import { CommitStructure } from "./CommitStructure";
 import { Button } from "./ui";
 import { notYet } from "@/lib/actions/commits";
 import { deadlineLabel } from "@/lib/utils";
+import type { Duration } from "@/lib/types";
 
 export function NotYetForm({
   commitId,
   text,
   originalDeadline,
+  duration,
 }: {
   commitId: string;
   text: string;
   originalDeadline: string;
+  duration?: Duration | null;
 }) {
   const router = useRouter();
   const [note, setNote] = useState("");
@@ -48,7 +51,13 @@ export function NotYetForm({
       </p>
 
       <div className="mt-5 rounded-2xl border border-border bg-surface p-4">
-        <CommitStructure text={text} deadline={originalDeadline} size="sm" tone="closed" />
+        <CommitStructure
+          text={text}
+          deadline={originalDeadline}
+          duration={duration}
+          size="sm"
+          tone="closed"
+        />
       </div>
 
       <textarea

@@ -31,6 +31,8 @@ export type ProfileRow = {
   created_at: string;
 };
 
+export type DurationUnit = "hours" | "days" | "weeks" | "months" | "years";
+
 export type CommitRow = {
   id: string;
   user_id: string;
@@ -39,6 +41,9 @@ export type CommitRow = {
   media_url: string | null;
   media_urls: string[] | null;
   deadline: string;
+  /** Set together when the commit was framed as "for 30 days" rather than a date. */
+  duration_amount: number | null;
+  duration_unit: DurationUnit | null;
   status: CommitStatus;
   original_deadline: string;
   parent_commit_id: string | null;
@@ -131,6 +136,7 @@ export type Database = {
     };
     Enums: {
       commit_status: CommitStatus;
+      duration_unit: DurationUnit;
       update_kind: UpdateKind;
       notification_type: NotificationType;
     };

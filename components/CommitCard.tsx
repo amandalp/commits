@@ -86,6 +86,7 @@ export function CommitCard({ commit }: { commit: CommitView }) {
           <CommitStructure
             text={commit.text}
             deadline={commit.deadline}
+            duration={commit.duration}
             size="md"
             tone={commit.status === "closed" ? "closed" : "active"}
           />
@@ -130,6 +131,7 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
           <CommitStructure
             text={commit.text}
             deadline={commit.deadline}
+            duration={commit.duration}
             size="md"
             tone="shipped"
           />

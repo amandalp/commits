@@ -1,10 +1,14 @@
 import type {
   CommitStatus,
+  DurationUnit,
   NotificationType,
   UpdateKind,
 } from "@/lib/database.types";
 
-export type { CommitStatus, NotificationType, UpdateKind };
+export type { CommitStatus, DurationUnit, NotificationType, UpdateKind };
+
+/** A commitment framed as a stretch of time — "for 30 days" — instead of a date. */
+export type Duration = { amount: number; unit: DurationUnit };
 
 /** A user as shown throughout the UI (avatar, name, @username). */
 export type Person = {
@@ -47,6 +51,8 @@ export type CommitView = {
   media_urls: string[];
   deadline: string;
   original_deadline: string;
+  /** Set when the commit reads "for 30 days"; the deadline is its end. */
+  duration: Duration | null;
   status: CommitStatus;
   created_at: string;
   shipped_at: string | null;

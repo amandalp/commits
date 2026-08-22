@@ -91,6 +91,7 @@ export default async function CommitDetailPage({
           <CommitStructure
             text={commit.text}
             deadline={commit.deadline}
+            duration={commit.duration}
             tone={shipped ? "shipped" : closed ? "closed" : "active"}
             size="lg"
           />

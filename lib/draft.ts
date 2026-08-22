@@ -3,9 +3,13 @@
  * localStorage so it survives the OAuth / magic-link redirect (same origin on
  * return) and is published once the visitor lands back in the authed app.
  */
+import type { Duration, DurationUnit } from "@/lib/types";
+
 export type PendingDraft = {
   text: string;
   deadline: string; // ISO
+  /** Set when the draft was framed as "for 30 days" rather than a date. */
+  duration?: Duration | null;
 };
 
 const KEY = "commits:pending_draft";
@@ -28,7 +32,14 @@ export function readPendingDraft(): PendingDraft | null {
     if (!parsed || typeof parsed.text !== "string" || typeof parsed.deadline !== "string") {
       return null;
     }
-    return { text: parsed.text, deadline: parsed.deadline };
+    const d = parsed.duration;
+    const duration =
+      d &&
+      typeof d.amount === "number" &&
+      ["days", "weeks", "months", "years"].includes(d.unit as string)
+        ? { amount: d.amount, unit: d.unit as DurationUnit }
+        : null;
+    return { text: parsed.text, deadline: parsed.deadline, duration };
   } catch {
     return null;
   }

@@ -22,7 +22,12 @@ export default async function ShipPage({
   return (
     <div>
       <TopBar variant="close" title="Cancel" fallbackHref={`/commit/${id}`} />
-      <ShipForm commitId={id} text={commit.text} deadline={commit.original_deadline} />
+      <ShipForm
+        commitId={id}
+        text={commit.text}
+        deadline={commit.original_deadline}
+        duration={commit.duration}
+      />
     </div>
   );
 }

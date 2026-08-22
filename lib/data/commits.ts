@@ -184,6 +184,10 @@ export async function enrichCommits(
           : [],
       deadline: r.deadline,
       original_deadline: r.original_deadline,
+      duration:
+        r.duration_amount && r.duration_unit
+          ? { amount: r.duration_amount, unit: r.duration_unit }
+          : null,
       status: r.status,
       created_at: r.created_at,
       shipped_at: r.shipped_at,

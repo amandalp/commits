@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { Duration } from "@/lib/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -35,6 +36,35 @@ export function deadlineLabel(iso: string): string {
     day: "numeric",
     ...(sameYear ? {} : { year: "numeric" }),
   });
+}
+
+/** "Aug 27" / "Aug 27, 2027" — a compact date for tails and captions. */
+export function deadlineLabelShort(iso: string): string {
+  const d = new Date(iso);
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+}
+
+/** "30 days" / "1 month" / "24 hours" — a commitment framed as a stretch of time. */
+export function durationLabel({ amount, unit }: Duration): string {
+  return `${amount} ${amount === 1 ? unit.slice(0, -1) : unit}`;
+}
+
+/**
+ * Where a duration lands: "Sep 21" for a run of days, and a clock time for one
+ * measured in hours — "6:00 PM" today, "Sep 23, 6:00 PM" once it crosses a day.
+ */
+export function durationEndsLabel(iso: string, unit: Duration["unit"]): string {
+  if (unit !== "hours") return deadlineLabelShort(iso);
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return d.toDateString() === new Date().toDateString()
+    ? time
+    : `${deadlineLabelShort(iso)}, ${time}`;
 }
 
 /** "August 27, 6:00 PM" — the commitment deadline with its time. */

@@ -26,6 +26,7 @@ export default async function NotYetPage({
         commitId={id}
         text={commit.text}
         originalDeadline={commit.original_deadline}
+        duration={commit.duration}
       />
     </div>
   );

@@ -6,7 +6,9 @@ import { Sparkles, Plus, Check, ImagePlus, Loader2, Users, X } from "lucide-reac
 import {
   DeadlineField,
   defaultDeadline,
+  durationDeadline,
   parseNaturalDeadline,
+  parseNaturalDuration,
   toLocalInput,
 } from "./DeadlineField";
 import { MediaStrip } from "./MediaStrip";
@@ -18,7 +20,7 @@ import { useThemeStyle } from "./ThemeStyle";
 import { cn } from "@/lib/utils";
 import { uploadMedia } from "@/lib/upload";
 import { createCommit } from "@/lib/actions/commits";
-import type { Person } from "@/lib/types";
+import type { Duration, Person } from "@/lib/types";
 
 const MAX_MEDIA = 6;
 const MAX_VIDEO_SECS = 60;
@@ -53,19 +55,37 @@ export function CreateCommitForm() {
   const [peopleOpen, setPeopleOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [when, setWhen] = useState(defaultDeadline);
+  // Non-null when the commitment reads "for 30 days" instead of "by <date>";
+  // `when` still carries the deadline that duration lands on.
+  const [duration, setDuration] = useState<Duration | null>(null);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Convenience only: if someone tacks a deadline onto the sentence
-  // ("… by Friday at noon"), lift it out into the date. Runs on blur so it
-  // never fights the user mid-keystroke, and only when the phrase parses.
+  // ("… by Friday at noon", "… for 30 days"), lift it out into the date or the
+  // duration. Runs on blur so it never fights the user mid-keystroke, and only
+  // when the phrase parses.
   function absorbNaturalLanguage() {
-    const m = text.trim().match(/^(.*\S)\s+by\s+(.+)$/i);
+    const trimmed = text.trim();
+
+    const span = trimmed.match(/^(.*\S)\s+for\s+(.+)$/i);
+    if (span) {
+      const parsed = parseNaturalDuration(span[2]);
+      if (parsed) {
+        setText(span[1]);
+        setDuration(parsed);
+        setWhen((w) => durationDeadline(parsed, w.split("T")[1] ?? "18:00"));
+        return;
+      }
+    }
+
+    const m = trimmed.match(/^(.*\S)\s+by\s+(.+)$/i);
     if (!m) return;
     const parsed = parseNaturalDeadline(m[2]);
     if (!parsed) return;
     setText(m[1]);
+    setDuration(null);
     setWhen(toLocalInput(parsed));
   }
 
@@ -121,6 +141,7 @@ export function CreateCommitForm() {
       context: noteOpen && context.trim() ? context : null,
       mediaUrls: media,
       deadline: new Date(when).toISOString(),
+      duration,
       loopInIds: loopIn.map((p) => p.id),
     });
     if (!res.ok) {
@@ -180,7 +201,13 @@ export function CreateCommitForm() {
         </div>
       </div>
 
-      <DeadlineField value={when} onChange={setWhen} hidden={!text.trim()} />
+      <DeadlineField
+        value={when}
+        onChange={setWhen}
+        duration={duration}
+        onDurationChange={setDuration}
+        hidden={!text.trim()}
+      />
 
       {text.trim() && (
         <div className="mt-5 space-y-3">

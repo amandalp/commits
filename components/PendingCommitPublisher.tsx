@@ -24,7 +24,11 @@ export function PendingCommitPublisher() {
     // Clear before awaiting so a re-render or second mount can't double-publish.
     clearPendingDraft();
 
-    createCommit({ text: draft.text, deadline: draft.deadline }).then((res) => {
+    createCommit({
+      text: draft.text,
+      deadline: draft.deadline,
+      duration: draft.duration ?? null,
+    }).then((res) => {
       if (res.ok && res.data) {
         router.replace(`/commit/${res.data.id}`);
         router.refresh();

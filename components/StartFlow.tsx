@@ -6,13 +6,16 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import {
   DeadlineField,
   defaultDeadline,
+  durationDeadline,
   parseNaturalDeadline,
+  parseNaturalDuration,
   toLocalInput,
 } from "./DeadlineField";
 import { HandwrittenCard } from "./HandwrittenCard";
 import { AuthButtons } from "./AuthButtons";
 import { Button } from "./ui";
 import { savePendingDraft } from "@/lib/draft";
+import type { Duration } from "@/lib/types";
 
 const HAND = "var(--font-hand), cursive";
 
@@ -25,17 +28,34 @@ export function StartFlow() {
   const [step, setStep] = useState<"compose" | "preview">("compose");
   const [text, setText] = useState("");
   const [when, setWhen] = useState(defaultDeadline);
+  // Non-null when the commitment reads "for 30 days" instead of "by <date>".
+  const [duration, setDuration] = useState<Duration | null>(null);
 
   const deadlineIso = () => new Date(when).toISOString();
 
-  // If someone tacks a deadline onto the sentence ("… by Friday"), lift it out
-  // into the date picker. Runs on blur so it never fights mid-keystroke.
+  // If someone tacks a deadline onto the sentence ("… by Friday", "… for 30
+  // days"), lift it out into the picker. Runs on blur so it never fights
+  // mid-keystroke.
   function absorbNaturalLanguage() {
-    const m = text.trim().match(/^(.*\S)\s+by\s+(.+)$/i);
+    const trimmed = text.trim();
+
+    const span = trimmed.match(/^(.*\S)\s+for\s+(.+)$/i);
+    if (span) {
+      const parsedSpan = parseNaturalDuration(span[2]);
+      if (parsedSpan) {
+        setText(span[1]);
+        setDuration(parsedSpan);
+        setWhen((w) => durationDeadline(parsedSpan, w.split("T")[1] ?? "18:00"));
+        return;
+      }
+    }
+
+    const m = trimmed.match(/^(.*\S)\s+by\s+(.+)$/i);
     if (!m) return;
     const parsed = parseNaturalDeadline(m[2]);
     if (!parsed) return;
     setText(m[1]);
+    setDuration(null);
     setWhen(toLocalInput(parsed));
   }
 
@@ -53,6 +73,7 @@ export function StartFlow() {
           <HandwrittenCard
             text={text.trim()}
             deadline={deadlineIso()}
+            duration={duration}
             author={{ id: "you", name: "You", username: "you", avatar_url: null }}
           />
         </div>
@@ -66,7 +87,9 @@ export function StartFlow() {
 
         <AuthButtons
           next="/"
-          onBeforeAuth={() => savePendingDraft({ text: text.trim(), deadline: deadlineIso() })}
+          onBeforeAuth={() =>
+            savePendingDraft({ text: text.trim(), deadline: deadlineIso(), duration })
+          }
         />
 
         <p className="mt-6 text-center text-[14px] text-muted">
@@ -105,7 +128,13 @@ export function StartFlow() {
         <div className="mt-1 text-right text-[12px] text-faint">{text.length}/280</div>
       </div>
 
-      <DeadlineField value={when} onChange={setWhen} hidden={!text.trim()} />
+      <DeadlineField
+        value={when}
+        onChange={setWhen}
+        duration={duration}
+        onDurationChange={setDuration}
+        hidden={!text.trim()}
+      />
 
       <Button
         full

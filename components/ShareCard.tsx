@@ -1,6 +1,6 @@
 import { Avatar } from "./Avatar";
-import { deadlineLabel } from "@/lib/utils";
-import type { Person } from "@/lib/types";
+import { deadlineLabel, durationLabel } from "@/lib/utils";
+import type { Duration, Person } from "@/lib/types";
 
 /**
  * The branded, screenshot-ready share card. Unmistakably Commits:
@@ -11,11 +11,14 @@ import type { Person } from "@/lib/types";
 export function ShareCard({
   text,
   deadline,
+  duration,
   author,
   shipped,
 }: {
   text: string;
   deadline: string;
+  /** Set when the commitment reads "for 30 days" rather than "by <date>". */
+  duration?: Duration | null;
   author: Person;
   shipped?: boolean;
 }) {
@@ -58,10 +61,10 @@ export function ShareCard({
             style={{ fontSize: "3.4cqi", letterSpacing: "0.12em" }}
             className="mt-[4cqi] font-bold text-muted"
           >
-            BY
+            {duration ? "FOR" : "BY"}
           </div>
           <div style={{ fontSize: "7cqi" }} className="mt-[1cqi] font-display font-bold text-accent">
-            {deadlineLabel(deadline)}
+            {duration ? durationLabel(duration) : deadlineLabel(deadline)}
           </div>
         </div>
 

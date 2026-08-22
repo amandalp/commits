@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ShareCard } from "@/components/ShareCard";
 import { Button } from "@/components/ui";
-import { deadlineLabel } from "@/lib/utils";
-import type { Person } from "@/lib/types";
+import { deadlineLabel, durationLabel } from "@/lib/utils";
+import type { Duration, DurationUnit, Person } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ async function getPublic(id: string) {
   const { data } = await supabase
     .from("commits")
     .select(
-      "id, text, deadline, status, shipped_at, author:profiles!commits_user_id_fkey(id, name, username, avatar_url)"
+      "id, text, deadline, duration_amount, duration_unit, status, shipped_at, author:profiles!commits_user_id_fkey(id, name, username, avatar_url)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -23,11 +23,29 @@ async function getPublic(id: string) {
         id: string;
         text: string;
         deadline: string;
+        duration_amount: number | null;
+        duration_unit: DurationUnit | null;
         status: string;
         shipped_at: string | null;
         author: Person;
       }
     | null;
+}
+
+/** The commit's own framing: "for 30 days" when it has one, else "by <date>". */
+function framing(c: {
+  deadline: string;
+  duration_amount: number | null;
+  duration_unit: DurationUnit | null;
+}): { duration: Duration | null; phrase: string } {
+  const duration =
+    c.duration_amount && c.duration_unit
+      ? { amount: c.duration_amount, unit: c.duration_unit }
+      : null;
+  return {
+    duration,
+    phrase: duration ? `for ${durationLabel(duration)}` : `by ${deadlineLabel(c.deadline)}`,
+  };
 }
 
 export async function generateMetadata({
@@ -41,14 +59,14 @@ export async function generateMetadata({
 
   const shipped = c.status === "shipped";
   const name = c.author.name;
-  const date = deadlineLabel(c.deadline);
+  const { phrase } = framing(c);
 
   // Generic they/them keeps the copy correct for every author — we don't
   // store anyone's pronouns, and guessing from a name would misgender people.
   const title = shipped ? `${name} did it` : `${name} is committing out loud`;
   const description = shipped
-    ? `${name} said they’d ${c.text} by ${date} — and they did. See what happened.`
-    : `${name} is going to ${c.text} by ${date}. Hold them to it — or commit to something of your own.`;
+    ? `${name} said they’d ${c.text} ${phrase} — and they did. See what happened.`
+    : `${name} is going to ${c.text} ${phrase}. Hold them to it — or commit to something of your own.`;
 
   return {
     title,
@@ -86,6 +104,7 @@ export default async function SharePage({
         <ShareCard
           text={c.text}
           deadline={c.deadline}
+          duration={framing(c).duration}
           author={c.author}
           shipped={c.status === "shipped"}
         />

@@ -11,6 +11,7 @@ import { Sheet } from "./Sheet";
 import { Button } from "./ui";
 import { cn } from "@/lib/utils";
 import { useThemeStyle } from "./ThemeStyle";
+import type { Duration, DurationUnit } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Date helpers
@@ -24,6 +25,16 @@ function atTime(base: Date, hour: number, min = 0): Date {
 
 function addDays(base: Date, days: number): Date {
   return new Date(base.getTime() + days * 864e5);
+}
+
+/** Add whole months, clamping to the last day when the target month is shorter. */
+function addMonths(base: Date, months: number): Date {
+  const d = new Date(base);
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+  d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+  return d;
 }
 
 /** Local "YYYY-MM-DDTHH:mm" — the value shape date/time inputs and the parent use. */
@@ -52,7 +63,13 @@ function dayLabel(d: Date): string {
   if (diff <= 0) return d.getHours() >= 17 ? "Tonight" : "Today";
   if (diff === 1) return "Tomorrow";
   if (diff < 7) return d.toLocaleDateString("en-US", { weekday: "long" });
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    // A long commitment can land in another year — say so rather than
+    // showing a bare "Aug 22" two years out.
+    ...(d.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
+  });
 }
 
 /** "6:00 PM". */
@@ -157,18 +174,105 @@ export function parseNaturalDeadline(phrase: string): Date | null {
 }
 
 // ---------------------------------------------------------------------------
+// Durations — "for 30 days" as an alternative framing of the same deadline.
+// ---------------------------------------------------------------------------
+
+export const DURATION_UNITS: DurationUnit[] = [
+  "hours",
+  "days",
+  "weeks",
+  "months",
+  "years",
+];
+
+/** The default when someone switches to a duration: 30 days. */
+export const defaultDuration: Duration = { amount: 30, unit: "days" };
+
+/** Quick picks per unit — the counts people actually commit to. */
+const DURATION_PRESETS: Record<DurationUnit, number[]> = {
+  hours: [6, 12, 24, 48, 72],
+  days: [7, 14, 21, 30, 60, 90],
+  weeks: [2, 4, 6, 8, 12, 26],
+  months: [1, 2, 3, 6, 9, 12],
+  years: [1, 2, 3, 5],
+};
+
+const MAX_AMOUNT: Record<DurationUnit, number> = {
+  hours: 72,
+  days: 365,
+  weeks: 52,
+  months: 36,
+  years: 10,
+};
+
+/** Clamp an amount into the range its unit allows. */
+export function clampDuration({ amount, unit }: Duration): Duration {
+  return { unit, amount: Math.min(Math.max(Math.round(amount) || 1, 1), MAX_AMOUNT[unit]) };
+}
+
+/**
+ * The deadline a duration lands on: now + the span, kept at `timePart` so the
+ * end of a "for 30 days" run still reads 6:00 PM rather than whenever the
+ * person happened to be typing.
+ */
+export function durationDeadline(duration: Duration, timePart = "18:00"): string {
+  const { amount, unit } = clampDuration(duration);
+  const now = new Date();
+
+  // Hours run from this moment — "for 12 hours" at 3:20 PM is up at 3:20 AM,
+  // not at some canonical evening hour.
+  if (unit === "hours") {
+    const end = new Date(now.getTime() + amount * 3600e3);
+    end.setSeconds(0, 0);
+    return toLocalInput(end);
+  }
+
+  const end =
+    unit === "days"
+      ? addDays(now, amount)
+      : unit === "weeks"
+        ? addDays(now, amount * 7)
+        : unit === "months"
+          ? addMonths(now, amount)
+          : addMonths(now, amount * 12);
+  const [h, m] = timePart.split(":").map(Number);
+  return toLocalInput(atTime(end, isNaN(h) ? 18 : h, isNaN(m) ? 0 : m));
+}
+
+/**
+ * Parse a trailing "for 30 days" the same way `parseNaturalDeadline` handles
+ * "by Friday" — a convenience for people who type the whole sentence.
+ */
+export function parseNaturalDuration(phrase: string): Duration | null {
+  const m = phrase
+    .trim()
+    .toLowerCase()
+    .match(/^(?:the\s+)?(\d{1,3})\s+(hour|day|week|month|year)s?$/);
+  if (!m) return null;
+  const unit = `${m[2]}s` as DurationUnit;
+  const amount = parseInt(m[1], 10);
+  if (!amount) return null;
+  return clampDuration({ amount, unit });
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-type OpenSheet = null | "when" | "date" | "time";
+type OpenSheet = null | "when" | "date" | "time" | "amount" | "unit";
 
 export function DeadlineField({
   value,
   onChange,
+  duration,
+  onDurationChange,
   hidden,
 }: {
   value: string;
   onChange: (v: string) => void;
+  /** Set when the commitment is framed as a stretch of time instead of a date. */
+  duration?: Duration | null;
+  onDurationChange?: (d: Duration | null) => void;
   /** Keep the whole line out of the flow until there's a commitment to date. */
   hidden?: boolean;
 }) {
@@ -188,24 +292,89 @@ export function DeadlineField({
 
   const link =
     "text-accent underline decoration-2 underline-offset-[5px] transition active:opacity-70";
+  const dim =
+    "text-muted underline decoration-1 underline-offset-[5px] transition active:opacity-70";
+
+  // Both framings stay on screen: whichever one is live is inked in accent, the
+  // other sits under an "or" in muted grey and switches on tap.
+  const byDuration = !!duration;
+  const showDuration = duration ?? defaultDuration;
+
+  /** Move to the duration framing (or edit it) — the deadline follows from it. */
+  function pickDuration(next: Duration) {
+    const clamped = clampDuration(next);
+    onDurationChange?.(clamped);
+    onChange(durationDeadline(clamped, timePart));
+  }
+
+  const lineClass = cn(
+    "font-display text-[22px] font-bold leading-tight text-ink",
+    hand && "ink-hand text-[26px]"
+  );
+  const altClass = cn(
+    "mt-1 font-display text-[19px] font-bold leading-tight text-muted",
+    hand && "ink-hand text-[23px]"
+  );
+
+  const byLine = (
+    <p key="by" className={byDuration ? altClass : lineClass}>
+      <span className="font-normal text-muted">{byDuration ? "or by " : "by "}</span>
+      <button
+        type="button"
+        onClick={() => {
+          onDurationChange?.(null);
+          setSheet("when");
+        }}
+        className={byDuration ? dim : link}
+      >
+        {dayLabel(d)}
+      </button>
+      <span className="font-normal text-muted">, </span>
+      <button
+        type="button"
+        onClick={() => {
+          onDurationChange?.(null);
+          setSheet("time");
+        }}
+        className={byDuration ? dim : link}
+      >
+        {timeLabel(d)}
+      </button>
+    </p>
+  );
+
+  const forLine = (
+    <p key="for" className={byDuration ? lineClass : altClass}>
+      <span className="font-normal text-muted">{byDuration ? "for " : "or for "}</span>
+      <button
+        type="button"
+        onClick={() => {
+          if (!byDuration) pickDuration(showDuration);
+          setSheet("amount");
+        }}
+        className={byDuration ? link : dim}
+      >
+        {showDuration.amount}
+      </button>{" "}
+      <button
+        type="button"
+        onClick={() => {
+          if (!byDuration) pickDuration(showDuration);
+          setSheet("unit");
+        }}
+        className={byDuration ? link : dim}
+      >
+        {showDuration.amount === 1
+          ? showDuration.unit.slice(0, -1)
+          : showDuration.unit}
+      </button>
+    </p>
+  );
 
   return (
     <div className="mt-4 animate-rise">
-      <p
-        className={cn(
-          "font-display text-[22px] font-bold leading-tight text-ink",
-          hand && "ink-hand text-[26px]"
-        )}
-      >
-        <span className="font-normal text-muted">by </span>
-        <button type="button" onClick={() => setSheet("when")} className={link}>
-          {dayLabel(d)}
-        </button>
-        <span className="font-normal text-muted">, </span>
-        <button type="button" onClick={() => setSheet("time")} className={link}>
-          {timeLabel(d)}
-        </button>
-      </p>
+      {/* The live framing leads; the alternative sits beneath it. */}
+      {byDuration ? [forLine, byLine] : [byLine, forLine]}
 
       {/* Day: quick presets + a route into the calendar. */}
       <Sheet open={sheet === "when"} onClose={() => setSheet(null)} title="When?">
@@ -281,6 +450,155 @@ export function DeadlineField({
           onDone={() => setSheet(null)}
         />
       </Sheet>
+
+      {/* How many — quick counts for the chosen unit, plus a stepper. */}
+      <Sheet
+        open={sheet === "amount"}
+        onClose={() => setSheet(null)}
+        title={`How many ${showDuration.unit}?`}
+      >
+        <AmountPicker
+          duration={showDuration}
+          onChange={pickDuration}
+          onDone={() => setSheet(null)}
+        />
+      </Sheet>
+
+      {/* Days / weeks / months / years. */}
+      <Sheet open={sheet === "unit"} onClose={() => setSheet(null)} title="Hours, days, months?">
+        <div className="space-y-0.5">
+          {DURATION_UNITS.map((u) => {
+            const active = showDuration.unit === u;
+            return (
+              <button
+                key={u}
+                type="button"
+                onClick={() => {
+                  // The number is the number: switching units keeps it, and
+                  // only trims it if it overshoots what that unit allows.
+                  pickDuration({ amount: showDuration.amount, unit: u });
+                  setSheet(null);
+                }}
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-3.5 text-left capitalize transition hover:bg-cream-deep"
+              >
+                <span
+                  className={cn(
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
+                    active ? "border-accent" : "border-border-strong"
+                  )}
+                >
+                  {active && <span className="h-2.5 w-2.5 rounded-full bg-accent" />}
+                </span>
+                <span
+                  className={cn(
+                    "text-[16px]",
+                    active ? "font-semibold text-ink" : "text-ink-soft"
+                  )}
+                >
+                  {u}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </Sheet>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Amount picker — quick chips for the usual counts, and a field to type any
+// other number straight in.
+// ---------------------------------------------------------------------------
+
+function AmountPicker({
+  duration,
+  onChange,
+  onDone,
+}: {
+  duration: Duration;
+  onChange: (d: Duration) => void;
+  onDone: () => void;
+}) {
+  const { amount, unit } = duration;
+  // While someone is typing, the field shows exactly what they typed — the
+  // committed (clamped) amount takes back over on blur or on a chip tap.
+  const [typed, setTyped] = useState<string | null>(null);
+
+  const set = (n: number) => {
+    setTyped(null);
+    onChange({ amount: n, unit });
+  };
+
+  function onType(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 3);
+    setTyped(digits);
+    const n = parseInt(digits, 10);
+    if (n) onChange({ amount: n, unit });
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {DURATION_PRESETS[unit].map((n) => {
+          const active = n === amount && typed === null;
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => set(n)}
+              className={cn(
+                "rounded-full border px-3.5 py-2 text-[14px] font-medium transition",
+                active
+                  ? "border-accent bg-accent text-white"
+                  : "border-border bg-surface text-ink-soft hover:border-border-strong"
+              )}
+            >
+              {n}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 flex items-center justify-center gap-3">
+        <input
+          type="text"
+          inputMode="numeric"
+          autoFocus
+          aria-label={`How many ${unit}`}
+          value={typed ?? String(amount)}
+          onChange={(e) => onType(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          onBlur={() => setTyped(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              setTyped(null);
+              onDone();
+            }
+          }}
+          className="w-28 rounded-2xl border border-border bg-surface py-2 text-center font-display text-[32px] font-bold tabular-nums text-ink outline-none transition focus:border-accent"
+        />
+        <span className="font-display text-[22px] font-bold capitalize text-ink-soft">
+          {amount === 1 ? unit.slice(0, -1) : unit}
+        </span>
+      </div>
+
+      <p className="mt-2 text-center text-[13px] text-faint">
+        up to {MAX_AMOUNT[unit]} {unit}
+      </p>
+
+      <Button
+        full
+        size="lg"
+        className="mt-6"
+        onClick={() => {
+          setTyped(null);
+          onDone();
+        }}
+      >
+        Done
+      </Button>
     </div>
   );
 }

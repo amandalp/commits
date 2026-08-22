@@ -8,15 +8,18 @@ import { MediaField } from "./MediaField";
 import { CommitStructure } from "./CommitStructure";
 import { Button } from "./ui";
 import { shipCommit } from "@/lib/actions/commits";
+import type { Duration } from "@/lib/types";
 
 export function ShipForm({
   commitId,
   text,
   deadline,
+  duration,
 }: {
   commitId: string;
   text: string;
   deadline: string;
+  duration?: Duration | null;
 }) {
   const router = useRouter();
   const [note, setNote] = useState("");
@@ -56,7 +59,13 @@ export function ShipForm({
       </div>
 
       <div className="mt-5 rounded-2xl border border-success-border bg-success-soft/50 p-4">
-        <CommitStructure text={text} deadline={deadline} size="sm" tone="shipped" />
+        <CommitStructure
+          text={text}
+          deadline={deadline}
+          duration={duration}
+          size="sm"
+          tone="shipped"
+        />
       </div>
 
       <div className="mt-5">

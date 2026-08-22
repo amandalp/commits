@@ -1,7 +1,7 @@
 import { Heart, MessageCircle, Send } from "lucide-react";
 import { CommitStructure } from "./CommitStructure";
 import { avatarColor, initials } from "@/lib/utils";
-import type { Person } from "@/lib/types";
+import type { Duration, Person } from "@/lib/types";
 
 /**
  * The login hero card. A left-justified commit note that mirrors the feed /
@@ -18,10 +18,12 @@ const WATCHERS = ["/demo/p2.jpg", "/demo/p3.jpg", "/demo/p4.jpg"];
 export function HandwrittenCard({
   text,
   deadline,
+  duration,
   author,
 }: {
   text: string;
   deadline: string;
+  duration?: Duration | null;
   author: Person;
 }) {
   return (
@@ -51,7 +53,7 @@ export function HandwrittenCard({
 
       {/* the promise — identical treatment to the feed and commit pages */}
       <div className="mt-4">
-        <CommitStructure text={text} deadline={deadline} size="md" />
+        <CommitStructure text={text} deadline={deadline} duration={duration} size="md" />
       </div>
 
       {/* engagement row */}

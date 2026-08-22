@@ -1,4 +1,10 @@
-import { cn, deadlineLabelTime } from "@/lib/utils";
+import {
+  cn,
+  deadlineLabelTime,
+  durationEndsLabel,
+  durationLabel,
+} from "@/lib/utils";
+import type { Duration } from "@/lib/types";
 
 const TEXT_SIZE = {
   sm: "text-[22px] leading-[1.12]",
@@ -27,6 +33,9 @@ const BY_SIZE = {
  *   [big handwritten commitment, hand-underlined]
  *   by [deadline + time in accent, hand-underlined]
  *
+ * A commit framed as a span of time reads "for 30 days · ends Sep 21"
+ * on that last line instead — same shape, same ink.
+ *
  * The `.ink-hand` / `.hw-underline` / `.hw-underline-accent` hooks activate the
  * marker face and hand-drawn underlines only under the handwritten theme (see
  * globals.css). Used identically in the feed and on the commit detail page.
@@ -34,12 +43,15 @@ const BY_SIZE = {
 export function CommitStructure({
   text,
   deadline,
+  duration,
   size = "sm",
   tone = "active",
   className,
 }: {
   text: string;
   deadline: string;
+  /** When set the commitment reads "for 30 days" and the deadline is its end. */
+  duration?: Duration | null;
   size?: keyof typeof TEXT_SIZE;
   tone?: "active" | "shipped" | "closed";
   className?: string;
@@ -62,15 +74,21 @@ export function CommitStructure({
         {text}
       </span>
       <span className={cn("mt-2 block", BY_SIZE[size])}>
-        <span className="ink-hand-light text-muted">by </span>
+        <span className="ink-hand-light text-muted">{duration ? "for " : "by "}</span>
         <span
           className={cn(
             "ink-hand-light inline",
             tone === "active" ? "hw-underline-accent text-accent" : "text-muted"
           )}
         >
-          {deadlineLabelTime(deadline)}
+          {duration ? durationLabel(duration) : deadlineLabelTime(deadline)}
         </span>
+        {duration && (
+          <span className="ink-hand-light whitespace-nowrap text-muted">
+            {" "}
+            · ends {durationEndsLabel(deadline, duration.unit)}
+          </span>
+        )}
       </span>
     </div>
   );
