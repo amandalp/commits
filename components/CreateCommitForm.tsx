@@ -159,7 +159,7 @@ export function CreateCommitForm() {
 
       <div className="mt-7">
         <label className={cn("mb-2 block text-[14px] font-medium text-muted", hand && "ink-hand text-[17px] text-ink-soft")}>
-          I want to
+          I&apos;m going to
         </label>
         <MentionTextarea
           autoGrow
