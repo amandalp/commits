@@ -38,14 +38,14 @@ const users = [
     location: "NYC",
     website: "linktr.ee/amandap",
   },
-  { key: "maya", email: "maya@example.com", name: "Maya Chen", username: "mayachen", bio: "Runner. Designer. One race at a time.", location: "San Francisco" },
-  { key: "alex", email: "alex@example.com", name: "Alex Martinez", username: "alexm", bio: "Indie hacker shipping small things.", location: "Austin", website: "alexbuilds.dev" },
-  { key: "sarah", email: "sarah@example.com", name: "Sarah Kim", username: "sarahk", bio: "Product designer looking for the next thing.", location: "Seattle" },
-  { key: "jordan", email: "jordan@example.com", name: "Jordan Lee", username: "jordanlee", bio: "Learning to cook for other people.", location: "Chicago" },
-  { key: "priya", email: "priya@example.com", name: "Priya Patel", username: "priyawrites", bio: "Writer. Finally hitting publish.", location: "London" },
-  { key: "marcus", email: "marcus@example.com", name: "Marcus Johnson", username: "marcusj", bio: "Turning talk into prototypes.", location: "Atlanta" },
-  { key: "taylor", email: "taylor@example.com", name: "Taylor Kim", username: "taylork", bio: "Cheering everyone on.", location: "LA" },
-  { key: "sam", email: "sam@example.com", name: "Sam Green", username: "samgreen", bio: "Shipping the beta, finally.", location: "Denver" },
+  { key: "maya", email: "maya@example.com", name: "Maya Chen", username: "mayachen", bio: "Runner. Designer. One race at a time.", location: "San Francisco", avatar: "/demo/maya.jpg" },
+  { key: "alex", email: "alex@example.com", name: "Alex Martinez", username: "alexm", bio: "Indie hacker shipping small things.", location: "Austin", website: "alexbuilds.dev", avatar: "/demo/alex.jpg" },
+  { key: "sarah", email: "sarah@example.com", name: "Sarah Kim", username: "sarahk", bio: "Product designer looking for the next thing.", location: "Seattle", avatar: "/demo/sarah.jpg" },
+  { key: "jordan", email: "jordan@example.com", name: "Jordan Lee", username: "jordanlee", bio: "Learning to cook for other people.", location: "Chicago", avatar: "/demo/jordan.jpg" },
+  { key: "priya", email: "priya@example.com", name: "Priya Patel", username: "priyawrites", bio: "Writer. Finally hitting publish.", location: "London", avatar: "/demo/priya.jpg" },
+  { key: "marcus", email: "marcus@example.com", name: "Marcus Johnson", username: "marcusj", bio: "Turning talk into prototypes.", location: "Atlanta", avatar: "/demo/marcus.jpg" },
+  { key: "taylor", email: "taylor@example.com", name: "Taylor Kim", username: "taylork", bio: "Cheering everyone on.", location: "LA", avatar: "/demo/taylor.jpg" },
+  { key: "sam", email: "sam@example.com", name: "Sam Green", username: "samgreen", bio: "Shipping the beta, finally.", location: "Denver", avatar: "/demo/sam.jpg" },
 ];
 
 const id = {}; // key -> user id
@@ -87,6 +87,9 @@ async function findOrCreateUsers() {
         bio: u.bio ?? null,
         location: u.location ?? null,
         website: u.website ?? null,
+        // Only set an avatar when the seed provides one, so a real user's
+        // existing photo (e.g. amanda) is never overwritten with null.
+        ...(u.avatar ? { avatar_url: u.avatar } : {}),
       },
       { onConflict: "id" }
     );
