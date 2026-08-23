@@ -10,6 +10,8 @@ export type PendingDraft = {
   deadline: string; // ISO
   /** Set when the draft was framed as "for 30 days" rather than a date. */
   duration?: Duration | null;
+  /** Weekdays to track check-ins on, when the draft repeats. */
+  repeatDays?: number[] | null;
 };
 
 const KEY = "commits:pending_draft";
@@ -39,7 +41,10 @@ export function readPendingDraft(): PendingDraft | null {
       ["days", "weeks", "months", "years"].includes(d.unit as string)
         ? { amount: d.amount, unit: d.unit as DurationUnit }
         : null;
-    return { text: parsed.text, deadline: parsed.deadline, duration };
+    const repeatDays = Array.isArray(parsed.repeatDays)
+      ? parsed.repeatDays.filter((d) => typeof d === "number" && d >= 1 && d <= 7)
+      : null;
+    return { text: parsed.text, deadline: parsed.deadline, duration, repeatDays };
   } catch {
     return null;
   }

@@ -20,6 +20,10 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   create type duration_unit as enum ('hours', 'days', 'weeks', 'months', 'years');
 exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type check_in_status as enum ('done', 'skipped');
+exception when duplicate_object then null; end $$;
 -- backfill for the enum created before short commitments existed
 alter type duration_unit add value if not exists 'hours' before 'days';
 
@@ -65,6 +69,9 @@ create table if not exists commits (
   -- (the deadline is derived from the duration at create time).
   duration_amount   int check (duration_amount is null or duration_amount between 1 and 365),
   duration_unit     duration_unit,
+  -- Weekdays this commit repeats on (ISO 1=Mon..7=Sun). Null = not tracked;
+  -- {1..7} = every day. Opting in turns on the check-in strip.
+  repeat_days       smallint[],
   status            commit_status not null default 'active',
   original_deadline timestamptz not null,
   parent_commit_id  uuid references commits(id) on delete set null,
@@ -87,6 +94,16 @@ alter table commits add column if not exists duration_unit duration_unit;
 do $$ begin
   alter table commits add constraint commits_duration_pair
     check ((duration_amount is null) = (duration_unit is null));
+exception when duplicate_object then null; end $$;
+-- repeating commits track check-ins on the weekdays they're scheduled for.
+alter table commits add column if not exists repeat_days smallint[];
+do $$ begin
+  alter table commits add constraint commits_repeat_days_valid check (
+    repeat_days is null or (
+      array_length(repeat_days, 1) between 1 and 7
+      and repeat_days <@ array[1,2,3,4,5,6,7]::smallint[]
+    )
+  );
 exception when duplicate_object then null; end $$;
 create index if not exists commits_user_idx    on commits(user_id, created_at desc);
 create index if not exists commits_created_idx  on commits(created_at desc);
@@ -175,6 +192,22 @@ create table if not exists updates (
   created_at timestamptz not null default now()
 );
 create index if not exists updates_commit_idx on updates(commit_id, created_at);
+
+-- ---------------------------------------------------------------------------
+--  check_ins  (the tracker inside a repeating commit — one row per day)
+-- ---------------------------------------------------------------------------
+create table if not exists check_ins (
+  id         uuid primary key default gen_random_uuid(),
+  commit_id  uuid not null references commits(id) on delete cascade,
+  user_id    uuid not null references profiles(id) on delete cascade,
+  day        date not null,
+  status     check_in_status not null default 'done',
+  -- the optional note/photo posted alongside the check-in, if there was one
+  update_id  uuid references updates(id) on delete set null,
+  created_at timestamptz not null default now(),
+  unique (commit_id, day)
+);
+create index if not exists check_ins_commit_idx on check_ins(commit_id, day);
 
 -- ---------------------------------------------------------------------------
 --  notifications
@@ -428,6 +461,7 @@ alter table loop_ins       enable row level security;
 alter table comments       enable row level security;
 alter table comment_likes  enable row level security;
 alter table updates        enable row level security;
+alter table check_ins      enable row level security;
 alter table notifications  enable row level security;
 
 -- profiles: world-readable; you manage your own row
@@ -511,6 +545,19 @@ create policy "updates write" on updates for insert with check (
   exists (select 1 from commits c where c.id = commit_id and c.user_id = auth.uid())
 );
 create policy "updates delete" on updates for delete using (auth.uid() = user_id);
+
+-- check_ins: as public as the commit they belong to; only its author writes
+drop policy if exists "check_ins read"   on check_ins;
+drop policy if exists "check_ins write"  on check_ins;
+drop policy if exists "check_ins update" on check_ins;
+drop policy if exists "check_ins delete" on check_ins;
+create policy "check_ins read"  on check_ins for select using (true);
+create policy "check_ins write" on check_ins for insert with check (
+  auth.uid() = user_id and
+  exists (select 1 from commits c where c.id = commit_id and c.user_id = auth.uid())
+);
+create policy "check_ins update" on check_ins for update using (auth.uid() = user_id);
+create policy "check_ins delete" on check_ins for delete using (auth.uid() = user_id);
 
 -- notifications: only the recipient can read / mark read
 drop policy if exists "notifs read"   on notifications;

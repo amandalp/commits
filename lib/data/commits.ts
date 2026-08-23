@@ -41,6 +41,7 @@ export async function enrichCommits(
     joinsRes,
     shipsRes,
     loopInsRes,
+    checkInsRes,
   ] = await Promise.all([
     parentIds.length
       ? supabase.from("commits").select("id, user_id, text").in("id", parentIds)
@@ -58,6 +59,14 @@ export async function enrichCommits(
       .in("commit_id", ids)
       .eq("kind", "ship"),
     supabase.from("loop_ins").select("user_id, commit_id, created_at").in("commit_id", ids),
+    // Only repeating commits carry check-ins; skip the query when none do.
+    rows.some((r) => r.repeat_days?.length)
+      ? supabase
+          .from("check_ins")
+          .select("commit_id")
+          .in("commit_id", ids)
+          .eq("status", "done")
+      : Promise.resolve({ data: [] as { commit_id: string }[] }),
   ]);
 
   const cheers = cheersRes.data ?? [];
@@ -66,6 +75,7 @@ export async function enrichCommits(
   const joins = joinsRes.data ?? [];
   const ships = shipsRes.data ?? [];
   const loopIns = loopInsRes.data ?? [];
+  const checkInRows = checkInsRes.data ?? [];
   const parents = (parentsRes.data ?? []) as {
     id: string;
     user_id: string;
@@ -81,6 +91,7 @@ export async function enrichCommits(
   const cheerCount = count(cheers);
   const watchCount = count(watches);
   const commentCount = count(comments);
+  const checkInCount = count(checkInRows);
 
   const joinCount = new Map<string, number>();
   const joinersByCommit = new Map<string, string[]>();
@@ -188,6 +199,8 @@ export async function enrichCommits(
         r.duration_amount && r.duration_unit
           ? { amount: r.duration_amount, unit: r.duration_unit }
           : null,
+      repeat_days: r.repeat_days ?? null,
+      check_in_count: checkInCount.get(r.id) ?? 0,
       status: r.status,
       created_at: r.created_at,
       shipped_at: r.shipped_at,

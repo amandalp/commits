@@ -32,6 +32,7 @@ export type ProfileRow = {
 };
 
 export type DurationUnit = "hours" | "days" | "weeks" | "months" | "years";
+export type CheckInStatus = "done" | "skipped";
 
 export type CommitRow = {
   id: string;
@@ -44,6 +45,8 @@ export type CommitRow = {
   /** Set together when the commit was framed as "for 30 days" rather than a date. */
   duration_amount: number | null;
   duration_unit: DurationUnit | null;
+  /** Weekdays this commit repeats on (ISO 1=Mon..7=Sun); null = not tracked. */
+  repeat_days: number[] | null;
   status: CommitStatus;
   original_deadline: string;
   parent_commit_id: string | null;
@@ -51,6 +54,16 @@ export type CommitRow = {
   updated_at: string;
   shipped_at: string | null;
   closed_at: string | null;
+};
+
+export type CheckInRow = {
+  id: string;
+  commit_id: string;
+  user_id: string;
+  day: string; // YYYY-MM-DD
+  status: CheckInStatus;
+  update_id: string | null;
+  created_at: string;
 };
 
 export type CommentRow = {
@@ -125,6 +138,10 @@ export type Database = {
         UpdateRow,
         Pick<UpdateRow, "commit_id" | "user_id"> & Partial<UpdateRow>
       >;
+      check_ins: Table<
+        CheckInRow,
+        Pick<CheckInRow, "commit_id" | "user_id" | "day"> & Partial<CheckInRow>
+      >;
       notifications: Table<NotificationRow>;
     };
     Views: Record<string, never>;
@@ -135,6 +152,7 @@ export type Database = {
       };
     };
     Enums: {
+      check_in_status: CheckInStatus;
       commit_status: CommitStatus;
       duration_unit: DurationUnit;
       update_kind: UpdateKind;

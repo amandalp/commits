@@ -1,11 +1,18 @@
 import type {
+  CheckInStatus,
   CommitStatus,
   DurationUnit,
   NotificationType,
   UpdateKind,
 } from "@/lib/database.types";
 
-export type { CommitStatus, DurationUnit, NotificationType, UpdateKind };
+export type { CheckInStatus, CommitStatus, DurationUnit, NotificationType, UpdateKind };
+
+/** One day's check-in on a repeating commit, keyed by local "YYYY-MM-DD". */
+export type CheckIn = {
+  day: string;
+  status: CheckInStatus;
+};
 
 /** A commitment framed as a stretch of time — "for 30 days" — instead of a date. */
 export type Duration = { amount: number; unit: DurationUnit };
@@ -53,6 +60,12 @@ export type CommitView = {
   original_deadline: string;
   /** Set when the commit reads "for 30 days"; the deadline is its end. */
   duration: Duration | null;
+  /** Weekdays a repeating commit is tracked on (ISO 1=Mon..7=Sun); null = untracked. */
+  repeat_days: number[] | null;
+  /** Check-ins logged so far — only loaded where the tracker is shown. */
+  check_ins?: CheckIn[];
+  /** Days checked off, for the compact progress line on lists. */
+  check_in_count: number;
   status: CommitStatus;
   created_at: string;
   shipped_at: string | null;

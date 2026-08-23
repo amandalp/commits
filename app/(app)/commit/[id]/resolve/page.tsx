@@ -3,8 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, Clock } from "lucide-react";
 import { getViewerId } from "@/lib/data/session";
 import { getCommit } from "@/lib/data/commits";
+import { getCheckIns } from "@/lib/data/checkins";
 import { TopBar } from "@/components/TopBar";
 import { CommitStructure } from "@/components/CommitStructure";
+import { RunSummary } from "@/components/RunSummary";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +23,15 @@ export default async function ResolvePage({
   if (commit.status === "shipped" || commit.status === "closed")
     redirect(`/commit/${id}`);
 
+  const tracked = !!commit.repeat_days?.length;
+  const checkIns = tracked ? await getCheckIns(id) : [];
+
   return (
     <div>
       <TopBar variant="close" fallbackHref={`/commit/${id}`} />
       <div className="px-5 pb-10 pt-4">
         <h1 className="ink-hand font-display text-[30px] font-bold text-ink">
-          did you do it?
+          {tracked ? "how'd it go?" : "did you do it?"}
         </h1>
         <p className="mt-2 text-[13px] font-medium text-muted">You said you’d:</p>
         <div className="mt-3 rounded-3xl border border-border bg-surface p-5">
@@ -38,6 +43,19 @@ export default async function ResolvePage({
           />
         </div>
 
+        {tracked && (
+          <div className="mt-5">
+            <RunSummary
+              commitId={commit.id}
+              createdAt={commit.created_at}
+              deadline={commit.deadline}
+              repeatDays={commit.repeat_days!}
+              checkIns={checkIns}
+              duration={commit.duration}
+            />
+          </div>
+        )}
+
         <div className="mt-6 space-y-3">
           <Link
             href={`/commit/${id}/ship`}
@@ -47,7 +65,9 @@ export default async function ResolvePage({
               <CheckCircle2 className="h-7 w-7" />
             </span>
             <span>
-              <span className="block text-lg font-bold text-ink">I did it</span>
+              <span className="block text-lg font-bold text-ink">
+                {tracked ? "I'm happy with that" : "I did it"}
+              </span>
               <span className="block text-[14px] text-success-strong">share the win</span>
             </span>
           </Link>

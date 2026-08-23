@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PartyPopper } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { CommitStructure } from "./CommitStructure";
+import { TrackProgress } from "./TrackProgress";
 import { CommitActions } from "./CommitActions";
 import { WatchingProof } from "./WatchingProof";
 import { StatusBadge } from "./ui";
@@ -91,6 +92,17 @@ export function CommitCard({ commit }: { commit: CommitView }) {
             tone={commit.status === "closed" ? "closed" : "active"}
           />
         </Link>
+
+        {commit.repeat_days?.length ? (
+          <Link href={`/commit/${commit.id}`} className="mt-2 block">
+            <TrackProgress
+              createdAt={commit.created_at}
+              deadline={commit.deadline}
+              repeatDays={commit.repeat_days}
+              doneCount={commit.check_in_count}
+            />
+          </Link>
+        ) : null}
 
         {unresolvedOwner && (
           <Link

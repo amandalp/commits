@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { CommitStructure } from "./CommitStructure";
+import { TrackProgress } from "./TrackProgress";
 import { StatusBadge } from "./ui";
 import { countdown, deadlineLabel, compact } from "@/lib/utils";
 import type { CommitView } from "@/lib/types";
@@ -45,6 +46,15 @@ export function CommitRow({ commit }: { commit: CommitView }) {
           size="sm"
           tone={shipped ? "shipped" : closed ? "closed" : "active"}
         />
+        {commit.repeat_days?.length ? (
+          <TrackProgress
+            className="mt-2 block"
+            createdAt={commit.created_at}
+            deadline={commit.deadline}
+            repeatDays={commit.repeat_days}
+            doneCount={commit.check_in_count}
+          />
+        ) : null}
         <div className="mt-2 flex items-center gap-3 text-[13px] text-muted">
           <span className={overdue ? "font-semibold text-accent" : ""}>{meta}</span>
           {commit.cheer_count > 0 && <span>🙌 {compact(commit.cheer_count)}</span>}

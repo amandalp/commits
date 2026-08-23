@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/data/session";
 import { getCommit, getJoiners, getUpdates } from "@/lib/data/commits";
 import { getComments } from "@/lib/data/comments";
+import { getCheckIns } from "@/lib/data/checkins";
 import { TopBar } from "@/components/TopBar";
 import { Avatar, AvatarStack } from "@/components/Avatar";
 import { CommitStructure } from "@/components/CommitStructure";
 import { CommitActions } from "@/components/CommitActions";
+import { CheckInTracker } from "@/components/CheckInTracker";
 import { WatchingProof } from "@/components/WatchingProof";
 import { OwnerComposer } from "@/components/OwnerComposer";
 import { Conversation } from "@/components/Conversation";
@@ -28,10 +30,11 @@ export default async function CommitDetailPage({
   const commit = await getCommit(id, viewer?.id ?? null);
   if (!commit) notFound();
 
-  const [joiners, comments, updates] = await Promise.all([
+  const [joiners, comments, updates, checkIns] = await Promise.all([
     commit.join_count > 0 ? getJoiners(id) : Promise.resolve([]),
     getComments(id, viewer?.id ?? null, "newest"),
     getUpdates(id),
+    commit.repeat_days?.length ? getCheckIns(id) : Promise.resolve([]),
   ]);
 
   const shipped = commit.status === "shipped";
@@ -148,6 +151,21 @@ export default async function CommitDetailPage({
           )}
           <WatchingProof commit={commit} className="ml-auto" />
         </div>
+
+        {/* the tracker for a repeating commit — one calendar, one promise */}
+        {commit.repeat_days?.length ? (
+          <div className="mt-5">
+            <CheckInTracker
+              commitId={commit.id}
+              createdAt={commit.created_at}
+              deadline={commit.deadline}
+              repeatDays={commit.repeat_days}
+              checkIns={checkIns}
+              isOwner={commit.is_owner}
+              resolved={shipped || closed}
+            />
+          </div>
+        ) : null}
 
         {/* the creator's control, directly beneath the promise */}
         {commit.is_owner && !shipped && !closed && (

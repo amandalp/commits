@@ -14,12 +14,15 @@ import {
 import { MediaStrip } from "./MediaStrip";
 import { MentionTextarea } from "./MentionTextarea";
 import { AddPeopleSheet } from "./AddPeopleSheet";
+import { TrackingField } from "./TrackingField";
 import { Avatar } from "./Avatar";
 import { Button } from "./ui";
 import { useThemeStyle } from "./ThemeStyle";
 import { cn } from "@/lib/utils";
 import { uploadMedia } from "@/lib/upload";
 import { createCommit } from "@/lib/actions/commits";
+import { detectRepeat, trackable, type Weekday } from "@/lib/schedule";
+import { durationLabel } from "@/lib/utils";
 import type { Duration, Person } from "@/lib/types";
 
 const MAX_MEDIA = 6;
@@ -58,6 +61,8 @@ export function CreateCommitForm() {
   // Non-null when the commitment reads "for 30 days" instead of "by <date>";
   // `when` still carries the deadline that duration lands on.
   const [duration, setDuration] = useState<Duration | null>(null);
+  // The days a repeating commitment is tracked on; null = not tracked.
+  const [repeatDays, setRepeatDays] = useState<Weekday[] | null>(null);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -142,6 +147,7 @@ export function CreateCommitForm() {
       mediaUrls: media,
       deadline: new Date(when).toISOString(),
       duration,
+      repeatDays,
       loopInIds: loopIn.map((p) => p.id),
     });
     if (!res.ok) {
@@ -205,9 +211,22 @@ export function CreateCommitForm() {
         value={when}
         onChange={setWhen}
         duration={duration}
-        onDurationChange={setDuration}
+        onDurationChange={(d) => {
+          setDuration(d);
+          if (!trackable(d)) setRepeatDays(null);
+        }}
         hidden={!text.trim()}
       />
+
+      {/* Tracking is only offered once there's a run of days to track. */}
+      {text.trim() && trackable(duration) && (
+        <TrackingField
+          detected={detectRepeat(text)}
+          value={repeatDays}
+          onChange={setRepeatDays}
+          durationLabel={durationLabel(duration!)}
+        />
+      )}
 
       {text.trim() && (
         <div className="mt-5 space-y-3">

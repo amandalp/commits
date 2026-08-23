@@ -12,9 +12,12 @@ import {
   toLocalInput,
 } from "./DeadlineField";
 import { HandwrittenCard } from "./HandwrittenCard";
+import { TrackingField } from "./TrackingField";
 import { AuthButtons } from "./AuthButtons";
 import { Button } from "./ui";
 import { savePendingDraft } from "@/lib/draft";
+import { detectRepeat, trackable, type Weekday } from "@/lib/schedule";
+import { durationLabel } from "@/lib/utils";
 import type { Duration } from "@/lib/types";
 
 const HAND = "var(--font-hand), cursive";
@@ -30,6 +33,7 @@ export function StartFlow() {
   const [when, setWhen] = useState(defaultDeadline);
   // Non-null when the commitment reads "for 30 days" instead of "by <date>".
   const [duration, setDuration] = useState<Duration | null>(null);
+  const [repeatDays, setRepeatDays] = useState<Weekday[] | null>(null);
 
   const deadlineIso = () => new Date(when).toISOString();
 
@@ -88,7 +92,12 @@ export function StartFlow() {
         <AuthButtons
           next="/"
           onBeforeAuth={() =>
-            savePendingDraft({ text: text.trim(), deadline: deadlineIso(), duration })
+            savePendingDraft({
+              text: text.trim(),
+              deadline: deadlineIso(),
+              duration,
+              repeatDays,
+            })
           }
         />
 
@@ -132,9 +141,21 @@ export function StartFlow() {
         value={when}
         onChange={setWhen}
         duration={duration}
-        onDurationChange={setDuration}
+        onDurationChange={(d) => {
+          setDuration(d);
+          if (!trackable(d)) setRepeatDays(null);
+        }}
         hidden={!text.trim()}
       />
+
+      {text.trim() && trackable(duration) && (
+        <TrackingField
+          detected={detectRepeat(text)}
+          value={repeatDays}
+          onChange={setRepeatDays}
+          durationLabel={durationLabel(duration!)}
+        />
+      )}
 
       <Button
         full

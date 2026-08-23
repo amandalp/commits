@@ -28,6 +28,7 @@ export function PendingCommitPublisher() {
       text: draft.text,
       deadline: draft.deadline,
       duration: draft.duration ?? null,
+      repeatDays: draft.repeatDays ?? null,
     }).then((res) => {
       if (res.ok && res.data) {
         router.replace(`/commit/${res.data.id}`);

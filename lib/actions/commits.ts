@@ -20,6 +20,8 @@ type CreateInput = {
   deadline: string; // ISO
   /** Set when the commit is framed as "for 30 days"; the deadline is its end. */
   duration?: Duration | null;
+  /** Weekdays to track check-ins on (ISO 1=Mon..7=Sun). Null = don't track. */
+  repeatDays?: number[] | null;
   parentCommitId?: string | null;
   /** People to put "in the loop" — notified they were CC'd on this commit. */
   loopInIds?: string[] | null;
@@ -50,6 +52,13 @@ export async function createCommit(
   )
     return { ok: false, error: "Pick how long you're committing for." };
 
+  // Tracking only makes sense across a run of days, and only on days that exist.
+  const repeatDays = duration
+    ? [...new Set(input.repeatDays ?? [])].filter((d) => d >= 1 && d <= 7).sort()
+    : [];
+  if (input.repeatDays?.length && !repeatDays.length)
+    return { ok: false, error: "Pick which days to check in on." };
+
   const { data, error } = await supabase
     .from("commits")
     .insert({
@@ -63,6 +72,7 @@ export async function createCommit(
       original_deadline: when.toISOString(),
       duration_amount: duration?.amount ?? null,
       duration_unit: duration?.unit ?? null,
+      repeat_days: repeatDays.length ? repeatDays : null,
       parent_commit_id: input.parentCommitId ?? null,
       status: "active",
     })
@@ -84,6 +94,49 @@ export async function createCommit(
   revalidatePath("/me");
   if (input.parentCommitId) revalidatePath(`/commit/${input.parentCommitId}`);
   return { ok: true, data: { id: data.id } };
+}
+
+/**
+ * "Keep going" at the end of a run: push the deadline out by the same span
+ * again, keeping the schedule and the check-ins already logged. The commitment
+ * stays the same commitment — this is a continuation, not a new promise.
+ */
+export async function extendCommit(commitId: string): Promise<ActionResult> {
+  const { supabase, userId } = await requireUser();
+
+  const { data: commit } = await supabase
+    .from("commits")
+    .select("id, user_id, deadline, duration_amount, duration_unit")
+    .eq("id", commitId)
+    .maybeSingle();
+  if (!commit || commit.user_id !== userId)
+    return { ok: false, error: "That's not your commitment." };
+
+  // Extend from today when the run has already lapsed, so the new stretch is
+  // the full span rather than time that's already gone.
+  const from = new Date(
+    Math.max(new Date(commit.deadline).getTime(), Date.now())
+  );
+  const amount = commit.duration_amount ?? 7;
+  const unit = commit.duration_unit ?? "days";
+  const next = new Date(from);
+  if (unit === "hours") next.setHours(next.getHours() + amount);
+  else if (unit === "days") next.setDate(next.getDate() + amount);
+  else if (unit === "weeks") next.setDate(next.getDate() + amount * 7);
+  else if (unit === "months") next.setMonth(next.getMonth() + amount);
+  else next.setFullYear(next.getFullYear() + amount);
+
+  const { error } = await supabase
+    .from("commits")
+    .update({ deadline: next.toISOString(), status: "active" })
+    .eq("id", commitId)
+    .eq("user_id", userId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/");
+  revalidatePath(`/commit/${commitId}`);
+  revalidatePath("/me");
+  return { ok: true };
 }
 
 /** Join = create a linked commit referencing the original. */
