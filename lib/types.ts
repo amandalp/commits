@@ -137,3 +137,54 @@ export function needsResolution(c: {
     new Date(c.deadline).getTime() < Date.now()
   );
 }
+
+// ---------------------------------------------------------------------------
+// The two commitment types
+// ---------------------------------------------------------------------------
+
+/**
+ * Commits come in two genuinely different shapes, and nobody should ever have
+ * to answer "is this a goal, habit, project, milestone or task?". The type is
+ * inferred from how the commitment was created:
+ *
+ *   one deadline      → big move   ("Apply to YC by October 14")
+ *   repeating cadence → everyday   ("Wear sunscreen every morning this week")
+ *
+ * A big move has an outcome and a date, and carries updates and watchers. An
+ * everyday commitment is a lightweight practice with a timeframe and tiny
+ * check-ins — never a permanent habit tracker.
+ */
+export type CommitKind = "big-move" | "everyday";
+
+export function commitKind(c: { repeat_days: number[] | null }): CommitKind {
+  return c.repeat_days?.length ? "everyday" : "big-move";
+}
+
+/**
+ * Open vs Done — the only two statuses the interface names. "Done" holds both
+ * successful commitments and honest endings; the difference is a quiet
+ * grouping inside it, not a separate tab.
+ */
+export function isDone(status: CommitStatus): boolean {
+  return status === "shipped" || status === "closed";
+}
+
+/** Split an Open list into its two passive sections, order preserved. */
+export function byKind<T extends { repeat_days: number[] | null }>(
+  commits: T[]
+): { bigMoves: T[]; everyday: T[] } {
+  return {
+    bigMoves: commits.filter((c) => commitKind(c) === "big-move"),
+    everyday: commits.filter((c) => commitKind(c) === "everyday"),
+  };
+}
+
+/** Split a Done list into shipped and closed, order preserved. */
+export function byEnding<T extends { status: CommitStatus }>(
+  commits: T[]
+): { shipped: T[]; closed: T[] } {
+  return {
+    shipped: commits.filter((c) => c.status === "shipped"),
+    closed: commits.filter((c) => c.status === "closed"),
+  };
+}

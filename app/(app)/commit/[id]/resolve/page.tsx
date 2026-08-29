@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, CalendarPlus } from "lucide-react";
 import { getViewerId } from "@/lib/data/session";
 import { getCommit } from "@/lib/data/commits";
 import { getCheckIns } from "@/lib/data/checkins";
 import { TopBar } from "@/components/TopBar";
 import { CommitStructure } from "@/components/CommitStructure";
 import { RunSummary } from "@/components/RunSummary";
+import { RepeatRunCard } from "@/components/RepeatRunCard";
+import { durationLabel } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +48,6 @@ export default async function ResolvePage({
         {tracked && (
           <div className="mt-5">
             <RunSummary
-              commitId={commit.id}
               createdAt={commit.created_at}
               deadline={commit.deadline}
               repeatDays={commit.repeat_days!}
@@ -56,32 +57,55 @@ export default async function ResolvePage({
           </div>
         )}
 
+        {/*
+          A big move gets the two answers its shape allows: I did it, or not
+          yet. An everyday commitment ends on purpose instead — close it out,
+          run it again, or turn it into something longer — so a week of
+          sunscreen never quietly becomes a permanent habit tracker.
+        */}
         <div className="mt-6 space-y-3">
           <Link
             href={`/commit/${id}/ship`}
             className="flex items-center gap-4 rounded-3xl border border-success-border bg-success-soft p-5 transition hover:brightness-[0.98] active:scale-[0.99]"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-success text-white">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-success text-white">
               <CheckCircle2 className="h-7 w-7" />
             </span>
             <span>
               <span className="block text-lg font-bold text-ink">
-                {tracked ? "I'm happy with that" : "I did it"}
+                {tracked ? "That's a wrap" : "I did it"}
               </span>
-              <span className="block text-[14px] text-success-strong">share the win</span>
+              <span className="block text-[14px] text-success-strong">
+                {tracked ? "close it out and share how it went" : "share the win"}
+              </span>
             </span>
           </Link>
+
+          {tracked && (
+            <RepeatRunCard
+              commitId={commit.id}
+              spanLabel={commit.duration ? durationLabel(commit.duration) : null}
+            />
+          )}
 
           <Link
             href={`/commit/${id}/not-yet`}
             className="flex items-center gap-4 rounded-3xl border border-border bg-surface p-5 transition hover:border-border-strong active:scale-[0.99]"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cream-deep text-ink-soft">
-              <Clock className="h-7 w-7" />
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cream-deep text-ink-soft">
+              {tracked ? (
+                <CalendarPlus className="h-7 w-7" />
+              ) : (
+                <Clock className="h-7 w-7" />
+              )}
             </span>
             <span>
-              <span className="block text-lg font-bold text-ink">Not yet</span>
-              <span className="block text-[14px] text-muted">Need more time</span>
+              <span className="block text-lg font-bold text-ink">
+                {tracked ? "Make it something longer" : "Not yet"}
+              </span>
+              <span className="block text-[14px] text-muted">
+                {tracked ? "pick a new end date — or let it go" : "Need more time"}
+              </span>
             </span>
           </Link>
         </div>

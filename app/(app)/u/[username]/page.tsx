@@ -1,9 +1,11 @@
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { getViewerId } from "@/lib/data/session";
 import { getProfileByUsername } from "@/lib/data/profile";
 import { getUserCommits } from "@/lib/data/commits";
 import { ProfileView } from "@/components/ProfileView";
 import { TopBar } from "@/components/TopBar";
+import { OPEN_FILTER_COOKIE, parseOpenFilter } from "@/lib/prefs";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +18,7 @@ export default async function UserProfilePage({
 }) {
   const { username } = await params;
   const { tab } = await searchParams;
-  const active = tab === "shipped" ? "shipped" : "active";
+  const active = tab === "done" ? "done" : "open";
   const viewerId = await getViewerId();
 
   const profile = await getProfileByUsername(username, viewerId);
@@ -31,6 +33,7 @@ export default async function UserProfilePage({
       <ProfileView
         profile={profile}
         activeTab={active}
+        openFilter={parseOpenFilter((await cookies()).get(OPEN_FILTER_COOKIE)?.value)}
         commits={commits}
         basePath={`/u/${username}`}
       />

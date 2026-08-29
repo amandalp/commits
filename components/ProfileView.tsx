@@ -6,8 +6,11 @@ import { FollowButton } from "./FollowButton";
 import { FollowStats } from "./FollowStats";
 import { EditProfileSheet } from "./EditProfileSheet";
 import { CommitCard, ShippedCard } from "./CommitCard";
-import { EmptyState, Button } from "./ui";
+import { EmptyState, Button, SectionHeader } from "./ui";
+import { OpenList } from "./OpenList";
 import { cn, compact } from "@/lib/utils";
+import { byEnding, byKind } from "@/lib/types";
+import type { OpenFilter } from "@/lib/prefs";
 import type { CommitView, ProfileFull } from "@/lib/types";
 
 function Stat({ value, label }: { value: number; label: string }) {
@@ -24,12 +27,18 @@ export function ProfileView({
   activeTab,
   commits,
   basePath,
+  openFilter,
 }: {
   profile: ProfileFull;
-  activeTab: "active" | "shipped";
+  activeTab: "open" | "done";
   commits: CommitView[];
   basePath: string; // "/profile" or "/u/username"
+  /** The viewer's remembered All / Big moves / Everyday choice. */
+  openFilter: OpenFilter;
 }) {
+  const { bigMoves, everyday } = byKind(commits);
+  const { shipped, closed } = byEnding(commits);
+
   const websiteHref = profile.website
     ? profile.website.startsWith("http")
       ? profile.website
@@ -131,46 +140,79 @@ export function ProfileView({
         )}
       </div>
 
-      {/* tabs */}
+      {/* tabs — Open and Done, nothing else */}
       <nav className="mt-4 flex border-b border-border-soft px-2">
-        <TabLink href={`${basePath}?tab=active`} label="Active" active={activeTab === "active"} />
-        <TabLink
-          href={`${basePath}?tab=shipped`}
-          label="Shipped"
-          active={activeTab === "shipped"}
-        />
+        <TabLink href={`${basePath}?tab=open`} label="Open" active={activeTab === "open"} />
+        <TabLink href={`${basePath}?tab=done`} label="Done" active={activeTab === "done"} />
       </nav>
 
       {commits.length === 0 ? (
         <EmptyState
-          title={activeTab === "active" ? "No active commitments" : "Nothing shipped yet"}
+          title={activeTab === "open" ? "Nothing open" : "Nothing finished yet"}
           body={
             profile.is_self
-              ? activeTab === "active"
+              ? activeTab === "open"
                 ? "Put something on the record."
-                : "Ship an active commitment and it shows up here."
+                : "Ship a commitment — or let one go — and it shows up here."
               : `${profile.name.split(" ")[0]} hasn't posted here yet.`
           }
           action={
-            profile.is_self && activeTab === "active" ? (
+            profile.is_self && activeTab === "open" ? (
               <Link href="/commit/new">
                 <Button>Make a Commit</Button>
               </Link>
             ) : undefined
           }
         />
+      ) : activeTab === "open" ? (
+        <OpenList
+          initial={openFilter}
+          hasBigMoves={bigMoves.length > 0}
+          hasEveryday={everyday.length > 0}
+          bigMoves={<Cards commits={bigMoves} />}
+          everyday={<Cards commits={everyday} />}
+        />
       ) : (
         <div className="animate-rise">
-          {commits.map((c) =>
-            activeTab === "shipped" ? (
-              <ShippedCard key={c.id} commit={c} />
-            ) : (
-              <CommitCard key={c.id} commit={c} />
-            )
-          )}
+          <Section label="Shipped" commits={shipped} />
+          <Section
+            label="Closed"
+            note="Changed direction, or deliberately let go."
+            commits={closed}
+          />
         </div>
       )}
     </div>
+  );
+}
+
+/** One passive section of the list. */
+function Section({
+  label,
+  note,
+  commits,
+}: {
+  label: string;
+  note?: string;
+  commits: CommitView[];
+}) {
+  if (commits.length === 0) return null;
+  return (
+    <section>
+      <SectionHeader label={label} note={note} />
+      <Cards commits={commits} />
+    </section>
+  );
+}
+
+/** Shipped commits keep their celebratory card; open and closed use the standard one. */
+function Cards({ commits }: { commits: CommitView[] }) {
+  return commits.map((c) =>
+    c.status === "shipped" ? (
+      <ShippedCard key={c.id} commit={c} />
+    ) : (
+      <CommitCard key={c.id} commit={c} />
+    )
   );
 }
 

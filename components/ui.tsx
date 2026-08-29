@@ -109,3 +109,27 @@ export function EmptyState({
     </div>
   );
 }
+
+/**
+ * The quiet dividers inside a list — "Big moves", "Everyday", "Shipped",
+ * "Closed". Deliberately passive: a label to orient by, never a control.
+ * There is nothing here to filter, fold, reorder or configure.
+ */
+export function SectionHeader({
+  label,
+  note,
+  className,
+}: {
+  label: string;
+  note?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("px-4 pb-2 pt-6 sm:px-5", className)}>
+      <h2 className="text-[11.5px] font-bold uppercase tracking-[0.11em] text-muted">
+        {label}
+      </h2>
+      {note && <p className="mt-1 text-[13px] leading-snug text-faint">{note}</p>}
+    </div>
+  );
+}

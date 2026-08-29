@@ -99,7 +99,7 @@ app/
     commit/[id]/ship     Ship flow (confetti + proof) → SHIPPED
     commit/[id]/not-yet  Not yet → new deadline (history kept) or close
     activity             Grouped in-app notifications
-    profile, u/[username], me   Profiles + My Commits (Active / Shipped)
+    profile, u/[username], me   Profiles + My Commits (Open / Done)
   login, onboarding      Auth + 15-second profile setup
   auth/callback          Magic-link / OAuth code exchange
   share/[id]             Public, crawlable share landing + dynamic OG image
@@ -155,7 +155,8 @@ Caveat, loaded via `next/font`.
 - Not Yet → move deadline (history kept) or close — `commit/[id]/not-yet`
 - Shipped posts in feed/profile, watchers notified — `ShippedCard`, ship trigger
 - Activity reflects social interactions (grouped) — `app/(app)/activity`
-- Active + Shipped on profiles — `ProfileView`, `me`
+- Open / Done on profiles — `ProfileView`, `me`. Open splits into Big moves
+  (one deadline) and Everyday (a repeating cadence); Done holds Shipped and Closed.
 - Shareable, unmistakably-Commits share card — `share/[id]` + OG image
 
 ---

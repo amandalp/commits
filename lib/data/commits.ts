@@ -5,6 +5,9 @@ import type { CommitView, Person, UpdateView } from "@/lib/types";
 
 type SB = SupabaseClient<Database>;
 
+/** The two lifecycle buckets the UI shows: Open and Done. */
+export type CommitBucket = "open" | "done";
+
 const PERSON = "id, name, username, avatar_url";
 const AVATAR_STACK = 5;
 
@@ -302,26 +305,43 @@ export async function getJoiners(commitId: string): Promise<Person[]> {
   );
 }
 
-/** All commits by a user, optionally filtered by lifecycle bucket. */
+/**
+ * A user's commits in one of the two buckets the interface names.
+ *
+ *   open — still on the record (active or past its deadline)
+ *   done — finished, either way: shipped, or closed after a change of
+ *          direction. Both endings belong in the same place; the split
+ *          between them is a grouping inside the list, not another tab.
+ */
 export async function getUserCommits(
   userId: string,
-  bucket: "active" | "shipped",
+  bucket: CommitBucket,
   viewerId: string | null
 ): Promise<CommitView[]> {
   const supabase = await createClient();
-  let query = supabase
+  const { data } = await supabase
     .from("commits")
     .select("*")
     .eq("user_id", userId)
-    .order(bucket === "shipped" ? "shipped_at" : "created_at", {
-      ascending: false,
-    });
+    .in(
+      "status",
+      bucket === "done" ? ["shipped", "closed"] : ["active", "overdue"]
+    )
+    .order("created_at", { ascending: false });
 
-  if (bucket === "shipped") query = query.eq("status", "shipped");
-  else query = query.in("status", ["active", "overdue"]);
+  const rows = (data ?? []) as CommitRow[];
 
-  const { data } = await query;
-  return enrichCommits(supabase, (data ?? []) as CommitRow[], viewerId);
+  // Done holds two kinds of ending, each stamped in its own column, so the
+  // list can only read newest-first once they're sorted on whichever one
+  // actually finished the commit.
+  if (bucket === "done") rows.sort((a, b) => endedAt(b).localeCompare(endedAt(a)));
+
+  return enrichCommits(supabase, rows, viewerId);
+}
+
+/** When a finished commit finished — shipped or closed, whichever happened. */
+function endedAt(r: CommitRow): string {
+  return r.shipped_at ?? r.closed_at ?? r.created_at;
 }
 
 /** Commits by the viewer that are past deadline and still unresolved. */
