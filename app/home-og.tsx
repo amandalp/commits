@@ -1,11 +1,11 @@
 import { ImageResponse } from "next/og";
 import { ACCENT, loadShareFonts } from "@/lib/og-render";
 
-// Shared by the root `opengraph-image` and `twitter-image` — the default
+// Shared by the root `opengraph-image` and `twitter-image`. The default
 // preview for any page without its own (homepage, login, etc.).
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "Commits — Commit out loud";
+export const alt = "Commits: commit out loud";
 
 const PAPER = "#fdfcf9";
 

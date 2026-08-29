@@ -86,7 +86,7 @@ export default function OnboardingPage() {
       <h1 className="text-2xl font-extrabold tracking-tight text-ink">
         Welcome to Commits
       </h1>
-      <p className="mt-1.5 text-[15px] text-muted">Set up your profile — takes 15 seconds.</p>
+      <p className="mt-1.5 text-[15px] text-muted">Set up your profile. Takes 15 seconds.</p>
 
       <div className="mt-7 flex justify-center">
         <label className="relative cursor-pointer">

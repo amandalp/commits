@@ -23,7 +23,7 @@ function personFrom(row: Record<string, unknown> | undefined | null): Person {
 /**
  * Turn raw commit rows into fully enriched CommitViews: authors, parent
  * references, social counts, viewer flags, avatar stacks and ship updates.
- * A handful of batched queries keyed by the commit id set — no N+1.
+ * A handful of batched queries keyed by the commit id set, so no N+1.
  */
 export async function enrichCommits(
   supabase: SB,
@@ -308,8 +308,8 @@ export async function getJoiners(commitId: string): Promise<Person[]> {
 /**
  * A user's commits in one of the two buckets the interface names.
  *
- *   open — still on the record (active or past its deadline)
- *   done — finished, either way: shipped, or closed after a change of
+ *   open: still on the record (active or past its deadline)
+ *   done: finished, either way: shipped, or closed after a change of
  *          direction. Both endings belong in the same place; the split
  *          between them is a grouping inside the list, not another tab.
  */
@@ -339,7 +339,7 @@ export async function getUserCommits(
   return enrichCommits(supabase, rows, viewerId);
 }
 
-/** When a finished commit finished — shipped or closed, whichever happened. */
+/** When a finished commit finished: shipped or closed, whichever happened. */
 function endedAt(r: CommitRow): string {
   return r.shipped_at ?? r.closed_at ?? r.created_at;
 }

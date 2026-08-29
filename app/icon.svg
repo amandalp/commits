@@ -10,6 +10,6 @@
     stroke-linejoin="round"
     fill="none"
   />
-  <!-- Violet period — said it, full stop -->
+  <!-- Violet period: said it, full stop -->
   <circle cx="75" cy="70" r="6.5" fill="#6d5ae6" />
 </svg>

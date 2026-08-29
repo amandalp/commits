@@ -10,7 +10,15 @@ export const metadata = {
   title: "Sign in · Commits",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  // Only ever bounce back into this app, never to a URL someone supplied.
+  const dest = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
+
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-10">
       <div className="mb-9 flex flex-col items-center text-center">
@@ -32,7 +40,7 @@ export default function LoginPage() {
         <p className="mt-3 text-[15px] text-muted">Welcome back.</p>
       </div>
 
-      <AuthButtons next="/" />
+      <AuthButtons next={dest} />
 
       <p className="mt-6 text-center text-[14px] text-muted">
         New to Commits?{" "}

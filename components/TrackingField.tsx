@@ -20,8 +20,8 @@ import {
  *   Looks like this repeats daily. Track your check-ins?
  *   [ Yes, track it ]  [ No thanks ]
  *
- * Once it's on, it collapses to a single quiet line — "Every day · 7 days ·
- * change" — so the creation screen stays a sentence, not a settings panel.
+ * Once it's on, it collapses to a single quiet line, "Every day · 7 days ·
+ * change", so the creation screen stays a sentence, not a settings panel.
  * Nobody has to pick a category: the offer only appears when the sentence
  * already sounds like it repeats, and it can always be switched on by hand.
  */
@@ -31,11 +31,11 @@ export function TrackingField({
   onChange,
   durationLabel,
 }: {
-  /** What the sentence sounded like, if anything — drives the gentle offer. */
+  /** What the sentence sounded like, if anything. Drives the gentle offer. */
   detected: Weekday[] | null;
   value: Weekday[] | null;
   onChange: (days: Weekday[] | null) => void;
-  /** "7 days" — shown next to the schedule so the run reads at a glance. */
+  /** "7 days": shown next to the schedule so the run reads at a glance. */
   durationLabel: string;
 }) {
   const { hand } = useThemeStyle();
@@ -76,7 +76,7 @@ export function TrackingField({
     );
   }
 
-  // The sentence sounds like it repeats — ask once, quietly.
+  // The sentence sounds like it repeats, so ask once, quietly.
   if (detected && !dismissed) {
     return (
       <div className="mt-4 rounded-2xl border border-border bg-surface px-4 py-3 animate-rise">

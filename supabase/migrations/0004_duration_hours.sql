@@ -1,5 +1,5 @@
 -- ============================================================================
---  Short commitments — "I'm going to X for 24 hours". Adds 'hours' to the
+--  Short commitments: "I'm going to X for 24 hours". Adds 'hours' to the
 --  duration units introduced in 0003.
 -- ============================================================================
 

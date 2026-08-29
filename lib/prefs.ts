@@ -1,6 +1,6 @@
 /**
  * Small, non-secret view preferences the server needs to know before it
- * renders — so they live in cookies rather than localStorage, the same way the
+ * renders, so they live in cookies rather than localStorage, the same way the
  * handwritten/clean theme does. Nothing here is worth a database row.
  *
  * Client-safe on purpose: the writer is a client component and the readers are

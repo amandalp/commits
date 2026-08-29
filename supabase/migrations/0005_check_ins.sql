@@ -1,10 +1,10 @@
 -- ============================================================================
---  Check-ins — the lightweight tracker inside a repeating Commit.
+--  Check-ins: the lightweight tracker inside a repeating Commit.
 --
 --  A commit opts in by storing the weekdays it repeats on (ISO 1=Mon..7=Sun);
 --  `null` means it isn't tracked at all, and {1,2,3,4,5,6,7} means every day.
 --  Each scheduled day can hold at most one check-in, done or skipped. The
---  commit's deadline still decides when it's over — this only records how the
+--  commit's deadline still decides when it's over, and this only records how the
 --  days went along the way.
 -- ============================================================================
 

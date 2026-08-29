@@ -63,7 +63,7 @@ export function NotYetForm({
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value.slice(0, 1000))}
-        placeholder="Life got busy — but I'm not giving up."
+        placeholder="Life got busy, but I'm not giving up."
         rows={3}
         className="mt-4 w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] text-ink outline-none focus:border-accent"
       />
@@ -80,7 +80,7 @@ export function NotYetForm({
             <span>
               <span className="block font-bold text-ink">I need more time</span>
               <span className="block text-[13px] text-muted">
-                Keep going — your history stays visible.
+                Keep going. Your history stays visible.
               </span>
             </span>
           </button>
@@ -131,8 +131,8 @@ export function NotYetForm({
       {mode === "close" && (
         <div className="mt-5 animate-rise">
           <p className="text-[15px] text-ink-soft">
-            This closes the commit. It stays on your profile with its full history —
-            nothing is erased.
+            This closes the commit. It stays on your profile with its full
+            history, and nothing is erased.
           </p>
           {error && <p className="mt-3 text-sm text-[#d1477a]">{error}</p>}
           <div className="mt-4 flex gap-2">

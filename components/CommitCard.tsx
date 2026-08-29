@@ -162,7 +162,7 @@ export function ShippedCard({ commit }: { commit: CommitView }) {
           />
         )}
 
-        {/* the signature beat — said it, did it. */}
+        {/* the signature beat: said it, did it. */}
         <div className="hw-shipdate mt-3 flex items-center gap-2">
           <span className="ink-hand text-[15px] font-semibold text-success-strong">
             said it. did it.

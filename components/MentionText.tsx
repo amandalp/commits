@@ -7,7 +7,7 @@ const MENTION = /(@[A-Za-z0-9_]{1,30})/g;
 
 /**
  * Renders free text with @username mentions turned into profile links. Plain,
- * dependency-free — safe in both server and client components. Wrap in a
+ * dependency-free, so it is safe in both server and client components. Wrap in a
  * `whitespace-pre-wrap` container to preserve the author's line breaks.
  */
 export function MentionText({ text }: { text: string }) {

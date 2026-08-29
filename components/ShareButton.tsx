@@ -86,7 +86,7 @@ export function ShareButton({
   };
 
   // Instagram / TikTok. On a phone the OS share sheet surfaces the real app and
-  // hands it the image — the "ready to post" flow. Desktop has no such target,
+  // hands it the image: the "ready to post" flow. Desktop has no such target,
   // so we save the asset and open the app's web uploader to pick it.
   async function toApp(dest: "Instagram" | "TikTok") {
     const file = assetFile();
@@ -117,7 +117,7 @@ export function ShareButton({
       }
     }
     window.location.href = `sms:?&body=${encodeURIComponent(
-      `I'm going to ${commit.text} — ${url}`
+      `I'm going to ${commit.text}: ${url}`
     )}`;
   }
 

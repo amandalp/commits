@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
  *
  *   Day 2 of 7 · 2/2 check-ins
  *
- * Deliberately not a streak and not a score — just where this one promise
+ * Deliberately not a streak and not a score, just where this one promise
  * stands. It runs on the client so "today" means the reader's today.
  */
 export function TrackProgress({

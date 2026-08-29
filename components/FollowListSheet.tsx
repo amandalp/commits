@@ -102,6 +102,7 @@ export function FollowListSheet({
                 <FollowButton
                   targetId={p.id}
                   initialFollowing={p.is_following}
+                  name={p.name}
                   size="sm"
                 />
               )}

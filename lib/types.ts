@@ -14,7 +14,7 @@ export type CheckIn = {
   status: CheckInStatus;
 };
 
-/** A commitment framed as a stretch of time — "for 30 days" — instead of a date. */
+/** A commitment framed as a stretch of time, "for 30 days", instead of a date. */
 export type Duration = { amount: number; unit: DurationUnit };
 
 /** A user as shown throughout the UI (avatar, name, @username). */
@@ -62,7 +62,7 @@ export type CommitView = {
   duration: Duration | null;
   /** Weekdays a repeating commit is tracked on (ISO 1=Mon..7=Sun); null = untracked. */
   repeat_days: number[] | null;
-  /** Check-ins logged so far — only loaded where the tracker is shown. */
+  /** Check-ins logged so far, only loaded where the tracker is shown. */
   check_ins?: CheckIn[];
   /** Days checked off, for the compact progress line on lists. */
   check_in_count: number;
@@ -152,7 +152,7 @@ export function needsResolution(c: {
  *
  * A big move has an outcome and a date, and carries updates and watchers. An
  * everyday commitment is a lightweight practice with a timeframe and tiny
- * check-ins — never a permanent habit tracker.
+ * check-ins, never a permanent habit tracker.
  */
 export type CommitKind = "big-move" | "everyday";
 
@@ -161,7 +161,7 @@ export function commitKind(c: { repeat_days: number[] | null }): CommitKind {
 }
 
 /**
- * Open vs Done — the only two statuses the interface names. "Done" holds both
+ * Open vs Done: the only two statuses the interface names. "Done" holds both
  * successful commitments and honest endings; the difference is a quiet
  * grouping inside it, not a separate tab.
  */

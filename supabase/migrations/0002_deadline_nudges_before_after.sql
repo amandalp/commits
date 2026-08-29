@@ -1,10 +1,10 @@
 -- ============================================================================
---  Migration: Deadline nudges — "how's it going?" 12h before AND 12h after
+--  Migration: Deadline nudges: "how's it going?" 12h before AND 12h after
 --  Apply once in the Supabase SQL editor. Safe to re-run (idempotent).
 --
 --  This change is already folded into schema.sql; this file is the minimal
 --  additive delta so you don't have to re-run the whole schema. It only
---  redefines one function — no table, column, or enum changes.
+--  redefines one function, so no table, column, or enum changes.
 --
 --  Before: fired once per commit due within the next 24h.
 --  After:  fires ~12h BEFORE the deadline, and again ~12h AFTER it if the

@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 const COLORS = ["#6d5ae6", "#2f9e63", "#c9772f", "#d1477a", "#3b82c4", "#f0c419"];
 
-// Deterministic pseudo-random in [0,1) — pure, so it's safe during render.
+// Deterministic pseudo-random in [0,1). Pure, so it's safe during render.
 function rnd(seed: number): number {
   const x = Math.sin(seed * 12.9898) * 43758.5453;
   return x - Math.floor(x);

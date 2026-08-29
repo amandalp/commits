@@ -6,7 +6,7 @@ import { compact } from "@/lib/utils";
 
 type Tab = "followers" | "following";
 
-/** The Following / Followers counts on a profile — tap either to open the list. */
+/** The Following / Followers counts on a profile. Tap either to open the list. */
 export function FollowStats({
   userId,
   name,

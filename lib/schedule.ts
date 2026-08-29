@@ -1,7 +1,7 @@
 import type { Duration } from "@/lib/types";
 
 /**
- * Repeating commits — "drink more water every day for the next 7 days".
+ * Repeating commits: "drink more water every day for the next 7 days".
  *
  * A schedule is just the weekdays a commit repeats on (ISO 1=Mon..7=Sun).
  * Everything here works in local time and speaks in "YYYY-MM-DD" day keys, so
@@ -25,7 +25,7 @@ export const WEEKDAY_NAMES = [
   "Sunday",
 ];
 
-/** Local "YYYY-MM-DD" for a date — the key a check-in is stored under. */
+/** Local "YYYY-MM-DD" for a date: the key a check-in is stored under. */
 export function dayKey(d: Date): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
@@ -37,7 +37,7 @@ export function fromDayKey(key: string): Date {
   return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
-/** ISO weekday (1=Mon..7=Sun) — JS's 0=Sun needs the shift. */
+/** ISO weekday (1=Mon..7=Sun). JS's 0=Sun needs the shift. */
 export function isoWeekday(d: Date): Weekday {
   return (((d.getDay() + 6) % 7) + 1) as Weekday;
 }
@@ -52,7 +52,7 @@ function addDays(d: Date, n: number): Date {
   return next;
 }
 
-/** "Every day" / "Weekdays" / "Mon, Wed, Fri" — how a schedule reads. */
+/** "Every day" / "Weekdays" / "Mon, Wed, Fri": how a schedule reads. */
 export function scheduleLabel(days: Weekday[]): string {
   const sorted = [...days].sort((a, b) => a - b);
   if (sorted.length === 7) return "Every day";
@@ -62,7 +62,7 @@ export function scheduleLabel(days: Weekday[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// Detection — infer a repeat from the sentence, never make people categorise.
+// Detection: infer a repeat from the sentence, never make people categorise.
 // ---------------------------------------------------------------------------
 
 const DAY_WORDS: Record<string, Weekday> = {
@@ -85,7 +85,7 @@ const DAY_WORDS: Record<string, Weekday> = {
 /**
  * Read a repeat out of what someone typed. Returns the weekdays it lands on,
  * or null when the sentence reads like a one-time outcome. Deliberately
- * conservative — a wrong guess costs more than a missed one, because the
+ * conservative, because a wrong guess costs more than a missed one, because the
  * offer to track is always available by hand.
  */
 export function detectRepeat(text: string): Weekday[] | null {
@@ -147,13 +147,13 @@ export function commitDays(
   const days: ScheduledDay[] = [];
   let cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
 
-  // The deadline lands a full span after the start — "for 7 days" made today
-  // is due a week from today — so the deadline's own date is the day *after*
+  // The deadline lands a full span after the start. "For 7 days" made today
+  // is due a week from today, so the deadline's own date is the day *after*
   // the run. Counting it would turn every 7-day commitment into 8 days.
   const last = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
   if (last < cursor) last.setTime(cursor.getTime());
 
-  // A guard rail rather than a real limit — a year of days is already more
+  // A guard rail rather than a real limit: a year of days is already more
   // than any grid should render.
   for (let i = 0; cursor <= last && i < 400; i++) {
     const key = dayKey(cursor);

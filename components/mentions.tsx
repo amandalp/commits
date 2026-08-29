@@ -7,7 +7,7 @@ import type { Person } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 // The @token immediately before the caret: an @ at a word boundary followed by
-// up to 30 handle characters. Empty (just "@") is allowed — we show follows.
+// up to 30 handle characters. Empty (just "@") is allowed, and we show follows.
 const TOKEN = /(?:^|\s)@([A-Za-z0-9_]{0,30})$/;
 
 type TextEl = HTMLInputElement | HTMLTextAreaElement;

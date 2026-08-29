@@ -10,18 +10,22 @@ import { CheerersSheet } from "./CheerersSheet";
 import { HandHeart, HandComment } from "./HandIcons";
 import { ShareButton } from "./ShareButton";
 import { useThemeStyle } from "./ThemeStyle";
+import { useAuthGate } from "./AuthGate";
 
 const actionBase =
   "inline-flex h-10 items-center justify-center gap-1 rounded-full px-1.5 text-[13px] font-medium transition-all active:scale-90";
 
 export function CommitActions({ commit }: { commit: CommitView }) {
   const { hand } = useThemeStyle();
+  const gate = useAuthGate();
   const [cheered, setCheered] = useState(commit.viewer_cheered);
   const [cheers, setCheers] = useState(commit.cheer_count);
   const [cheerersOpen, setCheerersOpen] = useState(false);
   const [burst, setBurst] = useState(false);
 
   function onCheer() {
+    if (!gate.require({ kind: "cheer", commitId: commit.id, who: commit.author.name }))
+      return;
     const next = !cheered;
     setCheered(next);
     setCheers((c) => c + (next ? 1 : -1));
@@ -86,7 +90,7 @@ export function CommitActions({ commit }: { commit: CommitView }) {
         {commit.comment_count > 0 && <span>{compact(commit.comment_count)}</span>}
       </Link>
 
-      {/* Share — the paper-plane "send" affordance, à la Threads/Instagram. */}
+      {/* Share: the paper-plane "send" affordance, à la Threads/Instagram. */}
       <ShareButton commit={commit} />
 
       <CheerersSheet

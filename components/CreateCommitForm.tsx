@@ -230,7 +230,7 @@ export function CreateCommitForm() {
 
       {text.trim() && (
         <div className="mt-5 space-y-3">
-          {/* The optional note — an inline underlined field, not a boxed composer. */}
+          {/* The optional note: an inline underlined field, not a boxed composer. */}
           {noteOpen && (
             <div className="animate-rise">
               <label
@@ -253,7 +253,7 @@ export function CreateCommitForm() {
             </div>
           )}
 
-          {/* People in the loop — chips with a live "+ add" affordance. */}
+          {/* People in the loop: chips with a live "+ add" affordance. */}
           {loopIn.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 animate-rise">
               <span className="text-[13px] font-medium text-muted">in the loop</span>

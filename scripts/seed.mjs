@@ -182,7 +182,7 @@ async function main() {
     createdAt: at(now - 12 * DAY),
     shippedAt: at(now - 6 * DAY),
   }).then((cid) =>
-    update("amanda", cid, "New landing page is live — cleaner story, faster load.", "ship", {
+    update("amanda", cid, "New landing page is live. Cleaner story, faster load.", "ship", {
       link_url: "https://commits.app",
     })
   );

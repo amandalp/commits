@@ -17,9 +17,9 @@ export const dynamic = "force-dynamic";
 /**
  * The personal record. Two statuses and nothing else: Open and Done.
  *
- * Open separates the two kinds of commitment the product actually has —
+ * Open separates the two kinds of commitment the product actually has:
  * big moves (one outcome, one deadline) and everyday practices (a cadence and
- * tiny check-ins) — as passive sections, not filters. Done holds both kinds of
+ * tiny check-ins), as passive sections, not filters. Done holds both kinds of
  * ending: shipped, and closed after a change of direction.
  */
 export default async function MyCommitsPage({

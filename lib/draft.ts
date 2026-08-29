@@ -21,7 +21,7 @@ export function savePendingDraft(draft: PendingDraft): void {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(draft));
   } catch {
-    /* storage full or blocked — nothing we can do, drop it */
+    /* storage full or blocked, nothing we can do, drop it */
   }
 }
 

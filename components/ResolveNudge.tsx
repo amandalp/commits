@@ -5,16 +5,16 @@ import { Sparkles, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useThemeStyle } from "./ThemeStyle";
 
-/** The gentle "you said you'd do this — did you do it?" prompt above the feed. */
+/** The gentle "you said you'd do this. did you do it?" prompt above the feed. */
 export function ResolveNudge({ href, count }: { href: string; count: number }) {
   const { hand } = useThemeStyle();
 
   const label =
     count > 1
-      ? `${count} deadlines reached — how'd they go?`
+      ? `${count} deadlines reached. How'd they go?`
       : hand
-      ? "you said you'd do this — did you do it?"
-      : "A deadline reached — did you do it?";
+      ? "you said you'd do this. did you do it?"
+      : "A deadline reached. Did you do it?";
 
   return (
     <Link

@@ -75,7 +75,7 @@ export function ShipForm({
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value.slice(0, 1000))}
-          placeholder="Guess what—I actually did it 😂"
+          placeholder="Guess what, I actually did it 😂"
           rows={3}
           className="w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] text-ink outline-none focus:border-accent"
         />

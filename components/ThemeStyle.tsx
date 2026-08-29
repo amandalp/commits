@@ -28,7 +28,7 @@ export function ThemeStyleProvider({
   const setStyle = useCallback((s: ThemeStyle) => {
     setStyleState(s);
     // Persist for a year and flip the root attribute instantly (no reload,
-    // no flash — CSS keys off [data-style] and copy off this context).
+    // no flash, since CSS keys off [data-style] and copy off this context).
     document.cookie = `commits_theme=${s === "clean" ? "clean" : "hand"}; path=/; max-age=31536000; samesite=lax`;
     document.documentElement.setAttribute("data-style", s);
   }, []);

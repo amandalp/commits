@@ -111,7 +111,7 @@ export function EmptyState({
 }
 
 /**
- * The quiet dividers inside a list — "Big moves", "Everyday", "Shipped",
+ * The quiet dividers inside a list: "Big moves", "Everyday", "Shipped",
  * "Closed". Deliberately passive: a label to orient by, never a control.
  * There is nothing here to filter, fold, reorder or configure.
  */

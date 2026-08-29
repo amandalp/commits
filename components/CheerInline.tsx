@@ -3,22 +3,28 @@
 import { useState } from "react";
 import { cn, compact } from "@/lib/utils";
 import { toggleCheer } from "@/lib/actions/social";
+import { useAuthGate } from "./AuthGate";
 
-/** Standalone cheer button with optimistic count — used on shipped posts. */
+/** Standalone cheer button with optimistic count, used on shipped posts. */
 export function CheerInline({
   commitId,
   initialCheered,
   initialCount,
+  authorName,
 }: {
   commitId: string;
   initialCheered: boolean;
   initialCount: number;
+  /** Only used to word the sign-in prompt a guest sees. */
+  authorName?: string;
 }) {
+  const gate = useAuthGate();
   const [cheered, setCheered] = useState(initialCheered);
   const [count, setCount] = useState(initialCount);
   const [burst, setBurst] = useState(false);
 
   function onClick() {
+    if (!gate.require({ kind: "cheer", commitId, who: authorName })) return;
     const next = !cheered;
     setCheered(next);
     setCount((c) => c + (next ? 1 : -1));

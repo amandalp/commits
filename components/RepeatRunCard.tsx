@@ -6,7 +6,7 @@ import { Repeat } from "lucide-react";
 import { extendCommit } from "@/lib/actions/commits";
 
 /**
- * "Run it again" — the middle answer at the end of an everyday commitment.
+ * "Run it again": the middle answer at the end of an everyday commitment.
  *
  * An everyday practice ends on purpose: at the end of the week you're asked
  * whether to close it, repeat it, or turn it into something longer. This is
@@ -19,7 +19,7 @@ export function RepeatRunCard({
   spanLabel,
 }: {
   commitId: string;
-  /** "7 days" — the span it would run for again. */
+  /** "7 days": the span it would run for again. */
   spanLabel: string | null;
 }) {
   const router = useRouter();

@@ -71,7 +71,7 @@ export function AuthButtons({
     });
     setPending(null);
     if (error) setError(error.message);
-    else setMessage("Magic link sent — check your email.");
+    else setMessage("Magic link sent. Check your email.");
   }
 
   async function withPassword() {

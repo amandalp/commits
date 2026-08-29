@@ -54,7 +54,7 @@ export function AppearanceToggle() {
   const { style, setStyle } = useThemeStyle();
 
   const options: { value: ThemeStyle; label: string; note: string }[] = [
-    { value: "handwritten", label: "Handwritten", note: "Warm, personal — said it, did it." },
+    { value: "handwritten", label: "Handwritten", note: "Warm, personal. Said it, did it." },
     { value: "clean", label: "Clean", note: "Crisp and minimal." },
   ];
 

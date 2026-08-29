@@ -23,7 +23,7 @@ type CreateInput = {
   /** Weekdays to track check-ins on (ISO 1=Mon..7=Sun). Null = don't track. */
   repeatDays?: number[] | null;
   parentCommitId?: string | null;
-  /** People to put "in the loop" — notified they were CC'd on this commit. */
+  /** People to put "in the loop": notified they were CC'd on this commit. */
   loopInIds?: string[] | null;
 };
 
@@ -40,7 +40,7 @@ export async function createCommit(
 
   const mediaUrls = (input.mediaUrls ?? []).filter(Boolean);
 
-  // A duration is a framing, not a second source of truth — reject anything
+  // A duration is a framing, not a second source of truth, so reject anything
   // out of range rather than storing a label the deadline doesn't match.
   const duration = input.duration ?? null;
   if (
@@ -99,7 +99,7 @@ export async function createCommit(
 /**
  * "Keep going" at the end of a run: push the deadline out by the same span
  * again, keeping the schedule and the check-ins already logged. The commitment
- * stays the same commitment — this is a continuation, not a new promise.
+ * stays the same commitment. This is a continuation, not a new promise.
  */
 export async function extendCommit(commitId: string): Promise<ActionResult> {
   const { supabase, userId } = await requireUser();
@@ -180,7 +180,7 @@ export async function shipCommit(
 ): Promise<ActionResult> {
   const { supabase, userId } = await requireUser();
 
-  // Record the ship update first — its trigger notifies watchers + joiners.
+  // Record the ship update first: its trigger notifies watchers + joiners.
   const { error: upErr } = await supabase.from("updates").insert({
     commit_id: commitId,
     user_id: userId,

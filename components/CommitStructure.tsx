@@ -34,7 +34,7 @@ const BY_SIZE = {
  *   by [deadline + time in accent, hand-underlined]
  *
  * A commit framed as a span of time reads "for 30 days · ends Sep 21"
- * on that last line instead — same shape, same ink.
+ * on that last line instead, same shape, same ink.
  *
  * The `.ink-hand` / `.hw-underline` / `.hw-underline-accent` hooks activate the
  * marker face and hand-drawn underlines only under the handwritten theme (see

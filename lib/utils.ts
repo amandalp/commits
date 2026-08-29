@@ -26,7 +26,7 @@ export function timeAgo(iso: string): string {
   });
 }
 
-/** "August 27" — the deadline as shown in the commitment sentence. */
+/** "August 27": the deadline as shown in the commitment sentence. */
 export function deadlineLabel(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
@@ -38,7 +38,7 @@ export function deadlineLabel(iso: string): string {
   });
 }
 
-/** "Aug 27" / "Aug 27, 2027" — a compact date for tails and captions. */
+/** "Aug 27" / "Aug 27, 2027": a compact date for tails and captions. */
 export function deadlineLabelShort(iso: string): string {
   const d = new Date(iso);
   const sameYear = d.getFullYear() === new Date().getFullYear();
@@ -49,14 +49,14 @@ export function deadlineLabelShort(iso: string): string {
   });
 }
 
-/** "30 days" / "1 month" / "24 hours" — a commitment framed as a stretch of time. */
+/** "30 days" / "1 month" / "24 hours": a commitment framed as a stretch of time. */
 export function durationLabel({ amount, unit }: Duration): string {
   return `${amount} ${amount === 1 ? unit.slice(0, -1) : unit}`;
 }
 
 /**
  * Where a duration lands: "Sep 21" for a run of days, and a clock time for one
- * measured in hours — "6:00 PM" today, "Sep 23, 6:00 PM" once it crosses a day.
+ * measured in hours. "6:00 PM" today, "Sep 23, 6:00 PM" once it crosses a day.
  */
 export function durationEndsLabel(iso: string, unit: Duration["unit"]): string {
   if (unit !== "hours") return deadlineLabelShort(iso);
@@ -67,7 +67,7 @@ export function durationEndsLabel(iso: string, unit: Duration["unit"]): string {
     : `${deadlineLabelShort(iso)}, ${time}`;
 }
 
-/** "August 27, 6:00 PM" — the commitment deadline with its time. */
+/** "August 27, 6:00 PM": the commitment deadline with its time. */
 export function deadlineLabelTime(iso: string): string {
   const time = new Date(iso).toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -76,7 +76,7 @@ export function deadlineLabelTime(iso: string): string {
   return `${deadlineLabel(iso)}, ${time}`;
 }
 
-/** "Tuesday, Aug 27 at 6:00 PM" — full deadline for detail/progress. */
+/** "Tuesday, Aug 27 at 6:00 PM": full deadline for detail/progress. */
 export function deadlineFull(iso: string): string {
   const d = new Date(iso);
   const date = d.toLocaleDateString("en-US", {

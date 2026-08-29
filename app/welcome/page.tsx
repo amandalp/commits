@@ -5,7 +5,7 @@ import { MarketingLanding } from "@/components/MarketingLanding";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Commits — social accountability, minus the shame",
+  title: "Commits: social accountability, minus the shame",
 };
 
 export default async function WelcomePage() {

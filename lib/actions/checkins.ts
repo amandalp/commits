@@ -8,7 +8,7 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * Log (or correct) one day on a repeating commit. The day key comes from the
- * browser so it means the day the person actually lived, not a UTC instant —
+ * browser so it means the day the person actually lived, not a UTC instant.
  * the checks below keep it inside the commit's own run.
  */
 export async function checkIn(
@@ -77,7 +77,7 @@ export async function checkIn(
   return { ok: true };
 }
 
-/** Undo a day — for when someone taps the wrong square. */
+/** Undo a day, for when someone taps the wrong square. */
 export async function clearCheckIn(
   commitId: string,
   day: string

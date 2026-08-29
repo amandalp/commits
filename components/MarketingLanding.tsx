@@ -210,7 +210,7 @@ export function MarketingLanding() {
           </Link>
         </div>
 
-        {/* Overlapping commit cards — clipped so the fan bleeds off the right
+        {/* Overlapping commit cards, clipped so the fan bleeds off the right
             edge instead of spilling left over the headline. */}
         <div className="relative -mx-5 overflow-hidden px-5 sm:mx-0 sm:px-0 lg:-mr-8">
           <div className="flex -space-x-12 py-4 sm:-space-x-10">

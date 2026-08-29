@@ -65,7 +65,7 @@ export function OwnerComposer({
   );
 }
 
-/** "share an update" — progress that doesn't resolve the promise. */
+/** "share an update": progress that doesn't resolve the promise. */
 function UpdatePanel({ commitId, onClose }: { commitId: string; onClose: () => void }) {
   const router = useRouter();
   const [text, setText] = useState("");
@@ -111,7 +111,7 @@ function UpdatePanel({ commitId, onClose }: { commitId: string; onClose: () => v
   );
 }
 
-/** "you did it. show us." — proof welcome, everything optional. */
+/** "you did it. show us.": proof welcome, everything optional. */
 function ShipPanel({ commitId, text, onClose }: { commitId: string; text: string; onClose: () => void }) {
   const router = useRouter();
   const [note, setNote] = useState("");
@@ -140,7 +140,7 @@ function ShipPanel({ commitId, text, onClose }: { commitId: string; text: string
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value.slice(0, 1000))}
-        placeholder="Guess what—I actually did it 😂"
+        placeholder="Guess what, I actually did it 😂"
         rows={3}
         autoFocus
         className="mt-3 w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] text-ink outline-none focus:border-success"
@@ -161,7 +161,7 @@ function ShipPanel({ commitId, text, onClose }: { commitId: string; text: string
   );
 }
 
-/** "what happened?" — three honest, un-punishing outs. */
+/** "what happened?": three honest, un-punishing outs. */
 function NotYetPanel({
   commitId,
   originalDeadline,
@@ -238,8 +238,8 @@ function NotYetPanel({
         <div className="mt-3 animate-rise">
           <p className="text-[15px] text-ink-soft">
             {choice === "changed"
-              ? "That’s allowed. This closes the commit — it stays on your profile with its full history."
-              : "No shame in it. This closes the commit — it stays on your profile with its full history."}
+              ? "That’s allowed. This closes the commit. It stays on your profile with its full history."
+              : "No shame in it. This closes the commit. It stays on your profile with its full history."}
           </p>
           <textarea
             value={note}

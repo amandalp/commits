@@ -1,5 +1,5 @@
 -- ============================================================================
---  Commit durations — "I'm going to X for 30 days" as an alternative to
+--  Commit durations: "I'm going to X for 30 days" as an alternative to
 --  "I'm going to X by <date>". The deadline is still the source of truth for
 --  countdowns and nudges (it's derived from the duration at create time);
 --  these columns only record how the commitment was framed so the card can

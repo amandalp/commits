@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import type { CheckIn } from "@/lib/types";
 
 /**
- * The tracker that lives inside one repeating Commit — and nowhere else. It
+ * The tracker that lives inside one repeating Commit, and nowhere else. It
  * answers a single question: did this person keep this particular promise?
  *
  *   drink more water
@@ -31,7 +31,7 @@ import type { CheckIn } from "@/lib/types";
  *        [ I did it today ]
  *
  * Short runs get the strip above; anything longer gets a compact month grid.
- * Missed days stay softly blank — never red, never scolding.
+ * Missed days stay softly blank: never red, never scolding.
  */
 export function CheckInTracker({
   commitId,
@@ -48,7 +48,7 @@ export function CheckInTracker({
   repeatDays: number[];
   checkIns: CheckIn[];
   isOwner: boolean;
-  /** Shipped or closed — the tracker becomes a record, not a control. */
+  /** Shipped or closed: the tracker becomes a record, not a control. */
   resolved?: boolean;
 }) {
   const router = useRouter();
@@ -56,7 +56,7 @@ export function CheckInTracker({
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Optimistic so a tap fills instantly — the strip is a one-tap surface and
+  // Optimistic so a tap fills instantly, since the strip is a one-tap surface and
   // any server round-trip in the middle of it would feel broken.
   const [logged, addLogged] = useOptimistic(
     checkIns,
@@ -160,7 +160,7 @@ export function CheckInTracker({
             </div>
           ) : todayStatus === "skipped" ? (
             <div className="flex items-center gap-3">
-              <span className="text-[15px] text-muted">not today — noted.</span>
+              <span className="text-[15px] text-muted">not today. noted.</span>
               <button
                 type="button"
                 onClick={() => log(todayKey, "done")}
@@ -211,7 +211,7 @@ function Strip({
   onTap: (d: ScheduledDay) => void;
   interactive: boolean;
 }) {
-  // Seven to a row, in the order they'll be lived — a week of the commitment
+  // Seven to a row, in the order they'll be lived: a week of the commitment
   // reads as one line, and a fortnight as two tidy ones.
   return (
     <div className="grid grid-cols-7 gap-x-1 gap-y-3">
@@ -310,7 +310,7 @@ function DayMark({
     weekday: "long",
     month: "long",
     day: "numeric",
-  })} — ${day.state}`;
+  })}: ${day.state}`;
 
   return (
     <button
@@ -349,7 +349,7 @@ function DayMark({
 }
 
 // ---------------------------------------------------------------------------
-// The optional note — checking in stays one tap; this is the extra step for
+// The optional note. Checking in stays one tap; this is the extra step for
 // people who want to say something about the day.
 // ---------------------------------------------------------------------------
 

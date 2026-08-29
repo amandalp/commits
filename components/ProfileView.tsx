@@ -54,7 +54,11 @@ export function ProfileView({
             {profile.is_self ? (
               <EditProfileSheet profile={profile} />
             ) : (
-              <FollowButton targetId={profile.id} initialFollowing={profile.is_following} />
+              <FollowButton
+                targetId={profile.id}
+                initialFollowing={profile.is_following}
+                name={profile.name}
+              />
             )}
           </div>
         </div>
@@ -140,7 +144,7 @@ export function ProfileView({
         )}
       </div>
 
-      {/* tabs — Open and Done, nothing else */}
+      {/* tabs: Open and Done, nothing else */}
       <nav className="mt-4 flex border-b border-border-soft px-2">
         <TabLink href={`${basePath}?tab=open`} label="Open" active={activeTab === "open"} />
         <TabLink href={`${basePath}?tab=done`} label="Done" active={activeTab === "done"} />
@@ -153,7 +157,7 @@ export function ProfileView({
             profile.is_self
               ? activeTab === "open"
                 ? "Put something on the record."
-                : "Ship a commitment — or let one go — and it shows up here."
+                : "Ship a commitment, or let one go, and it shows up here."
               : `${profile.name.split(" ")[0]} hasn't posted here yet.`
           }
           action={

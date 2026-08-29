@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { shareMeta } from "@/lib/share-copy";
 import { getCurrentUser } from "@/lib/data/session";
 import { getCommit, getJoiners, getUpdates } from "@/lib/data/commits";
 import { getComments } from "@/lib/data/comments";
@@ -19,6 +22,50 @@ import { StatusBadge } from "@/components/ui";
 import { timeAgo, deadlineLabel, compact } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * The commitment page is public, so its URL travels, pasted into group chats
+ * as often as the /share card is. It gets the same preview, pointing at the
+ * real page rather than the interstitial.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("commits")
+    .select(
+      "id, text, deadline, duration_amount, duration_unit, status, author:profiles!commits_user_id_fkey(name)"
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!data) return { title: "Commits" };
+
+  const { title, description } = shareMeta(
+    data as unknown as Parameters<typeof shareMeta>[0]
+  );
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/commit/${id}`,
+      siteName: "Commits",
+      type: "article",
+      images: [`/share/${id}/opengraph-image`],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`/share/${id}/opengraph-image`],
+    },
+  };
+}
 
 export default async function CommitDetailPage({
   params,
@@ -89,7 +136,7 @@ export default async function CommitDetailPage({
           </div>
         )}
 
-        {/* the promise itself — light hero, no task-card chrome */}
+        {/* the promise itself: light hero, no task-card chrome */}
         <div className="mt-5">
           <CommitStructure
             text={commit.text}
@@ -139,7 +186,7 @@ export default async function CommitDetailPage({
           )}
         </div>
 
-        {/* actions — the same heart · comment · send row everywhere, with the
+        {/* actions: the same heart · comment · send row everywhere, with the
             joined stack and deadline alongside it. */}
         <div className="mt-5 flex items-center gap-4">
           <CommitActions commit={commit} />
@@ -152,7 +199,7 @@ export default async function CommitDetailPage({
           <WatchingProof commit={commit} className="ml-auto" />
         </div>
 
-        {/* the tracker for a repeating commit — one calendar, one promise */}
+        {/* the tracker for a repeating commit: one calendar, one promise */}
         {commit.repeat_days?.length ? (
           <div className="mt-5">
             <CheckInTracker
@@ -182,7 +229,6 @@ export default async function CommitDetailPage({
         <div className="mt-7 border-t border-border-soft pt-6">
           <Conversation
             commitId={commit.id}
-            viewer={viewer}
             comments={comments}
             updates={updates}
             ship={commit.ship ?? null}
@@ -190,7 +236,7 @@ export default async function CommitDetailPage({
           />
         </div>
 
-        {/* who joined — secondary social proof */}
+        {/* who joined: secondary social proof */}
         {joiners.length > 0 && (
           <div className="mt-8">
             <h2 className="mb-2.5 px-1 text-[15px] font-bold text-ink">

@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ShareCard } from "@/components/ShareCard";
 import { Button } from "@/components/ui";
-import { deadlineLabel, durationLabel } from "@/lib/utils";
-import type { Duration, DurationUnit, Person } from "@/lib/types";
+import { framing, shareMeta } from "@/lib/share-copy";
+import type { DurationUnit, Person } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -32,22 +32,6 @@ async function getPublic(id: string) {
     | null;
 }
 
-/** The commit's own framing: "for 30 days" when it has one, else "by <date>". */
-function framing(c: {
-  deadline: string;
-  duration_amount: number | null;
-  duration_unit: DurationUnit | null;
-}): { duration: Duration | null; phrase: string } {
-  const duration =
-    c.duration_amount && c.duration_unit
-      ? { amount: c.duration_amount, unit: c.duration_unit }
-      : null;
-  return {
-    duration,
-    phrase: duration ? `for ${durationLabel(duration)}` : `by ${deadlineLabel(c.deadline)}`,
-  };
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -57,16 +41,7 @@ export async function generateMetadata({
   const c = await getPublic(id);
   if (!c) return { title: "Commits" };
 
-  const shipped = c.status === "shipped";
-  const name = c.author.name;
-  const { phrase } = framing(c);
-
-  // Generic they/them keeps the copy correct for every author — we don't
-  // store anyone's pronouns, and guessing from a name would misgender people.
-  const title = shipped ? `${name} did it` : `${name} is committing out loud`;
-  const description = shipped
-    ? `${name} said they’d ${c.text} ${phrase} — and they did. See what happened.`
-    : `${name} is going to ${c.text} ${phrase}. Hold them to it — or commit to something of your own.`;
+  const { title, description } = shareMeta(c);
 
   return {
     title,
@@ -115,7 +90,7 @@ export default async function SharePage({
             Open in Commits
           </Button>
         </Link>
-        <Link href="/login">
+        <Link href="/start">
           <Button full size="lg" variant="secondary">
             Make your own commitment
           </Button>

@@ -12,7 +12,7 @@ import type { CheckIn, Duration } from "@/lib/types";
  *
  * The truth, without the punishment. Five days out of seven is a real result,
  * so the copy never treats anything short of perfect as a failure. It only
- * reports — the three ways to answer it sit underneath.
+ * reports. The three ways to answer it sit underneath.
  */
 export function RunSummary({
   createdAt,

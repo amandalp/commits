@@ -82,9 +82,9 @@ export function AddPeopleSheet({
       open={open}
       onClose={handleClose}
       title="Put someone in the loop"
-      subtitle="They'll be told you said this — it doesn't make them responsible for it."
+      subtitle="They'll be told you said this. It doesn't make them responsible for it."
     >
-      {/* Search field — leading magnifier, matches the app's input convention. */}
+      {/* Search field: leading magnifier, matches the app's input convention. */}
       <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface px-3.5 py-2.5 focus-within:border-accent">
         <Search className="h-[18px] w-[18px] shrink-0 text-muted" />
         <input
@@ -110,7 +110,7 @@ export function AddPeopleSheet({
           </p>
         ) : !list || list.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted">
-            {q ? "No one found." : "Follow people to see them here — or search above."}
+            {q ? "No one found." : "Follow people to see them here, or search above."}
           </p>
         ) : (
           <div className="max-h-[46vh] space-y-0.5 overflow-y-auto">

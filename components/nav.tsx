@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bell, User, Plus } from "lucide-react";
+import { Home, Bell, User, Plus, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "./Avatar";
 import { Wordmark } from "./Wordmark";
@@ -16,9 +16,30 @@ type NavItem = {
   match: (p: string) => boolean;
 };
 
-function items(username: string): NavItem[] {
+/**
+ * Guests get Home and a way in. Activity and Profile only mean something once
+ * there's an account behind them, so they're replaced by a single Sign in.
+ */
+function items(user: SessionUser | null): NavItem[] {
+  const home: NavItem = {
+    href: "/",
+    label: "Home",
+    icon: Home,
+    match: (p) => p === "/",
+  };
+  if (!user) {
+    return [
+      home,
+      {
+        href: "/login",
+        label: "Sign in",
+        icon: LogIn,
+        match: (p) => p.startsWith("/login"),
+      },
+    ];
+  }
   return [
-    { href: "/", label: "Home", icon: Home, match: (p) => p === "/" },
+    home,
     {
       href: "/activity",
       label: "Activity",
@@ -29,10 +50,13 @@ function items(username: string): NavItem[] {
       href: "/profile",
       label: "Profile",
       icon: User,
-      match: (p) => p === "/profile" || p === `/u/${username}` || p === "/me",
+      match: (p) => p === "/profile" || p === `/u/${user.username}` || p === "/me",
     },
   ];
 }
+
+/** Guests compose at /start, which asks for an account only once it's written. */
+const composeHref = (user: SessionUser | null) => (user ? "/commit/new" : "/start");
 
 function BottomTab({
   item,
@@ -78,11 +102,12 @@ export function BottomNav({
   user,
   unread,
 }: {
-  user: SessionUser;
+  user: SessionUser | null;
   unread: number;
 }) {
   const pathname = usePathname();
-  const [home, activity, profile] = items(user.username);
+  const nav = items(user);
+  const [home, ...rest] = nav;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-cream/90 backdrop-blur-md sm:hidden pb-safe">
@@ -90,15 +115,16 @@ export function BottomNav({
         <BottomTab item={home} pathname={pathname} unread={unread} />
         <div className="flex flex-1 justify-center">
           <Link
-            href="/commit/new"
-            aria-label="Create a commit"
+            href={composeHref(user)}
+            aria-label="Make a commit"
             className="flex h-12 w-12 -translate-y-1 items-center justify-center rounded-2xl bg-ink text-white shadow-card transition active:scale-95"
           >
             <Plus className="h-6 w-6" strokeWidth={2.5} />
           </Link>
         </div>
-        <BottomTab item={activity} pathname={pathname} unread={unread} />
-        <BottomTab item={profile} pathname={pathname} unread={unread} />
+        {rest.map((item) => (
+          <BottomTab key={item.href} item={item} pathname={pathname} unread={unread} />
+        ))}
       </div>
     </nav>
   );
@@ -109,11 +135,11 @@ export function SideNav({
   user,
   unread,
 }: {
-  user: SessionUser;
+  user: SessionUser | null;
   unread: number;
 }) {
   const pathname = usePathname();
-  const nav = items(user.username);
+  const nav = items(user);
   const { hand } = useThemeStyle();
 
   return (
@@ -152,7 +178,7 @@ export function SideNav({
         </div>
 
         <Link
-          href="/commit/new"
+          href={composeHref(user)}
           className="mt-4 flex items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 text-[15px] font-semibold text-white transition hover:bg-ink-soft active:scale-[0.98]"
         >
           <Plus className="h-5 w-5" strokeWidth={2.5} />
@@ -162,16 +188,30 @@ export function SideNav({
         </Link>
       </div>
 
-      <Link
-        href="/profile"
-        className="flex items-center gap-3 rounded-full p-2 transition hover:bg-cream-deep"
-      >
-        <Avatar person={user} size="sm" />
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-ink">{user.name}</div>
-          <div className="truncate text-[12px] text-muted">@{user.username}</div>
+      {user ? (
+        <Link
+          href="/profile"
+          className="flex items-center gap-3 rounded-full p-2 transition hover:bg-cream-deep"
+        >
+          <Avatar person={user} size="sm" />
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold text-ink">{user.name}</div>
+            <div className="truncate text-[12px] text-muted">@{user.username}</div>
+          </div>
+        </Link>
+      ) : (
+        <div className="px-1 pb-1">
+          <p className="mb-2.5 px-2 text-[13px] leading-snug text-muted">
+            Cheering, watching and commenting need an account.
+          </p>
+          <Link
+            href="/login"
+            className="flex items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 py-2.5 text-[14.5px] font-semibold text-ink transition hover:border-border-strong"
+          >
+            Sign in
+          </Link>
         </div>
-      </Link>
+      )}
     </aside>
   );
 }

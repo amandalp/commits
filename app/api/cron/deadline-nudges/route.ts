@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * Scheduled deadline nudges. Vercel Cron hits this hourly (see vercel.json)
- * and it fans out the "how's it going?" notifications — ~12h before each
+ * and it fans out the "how's it going?" notifications: ~12h before each
  * deadline and ~12h after, if the commit is still open. All the windowing and
  * de-duping lives in the generate_deadline_notifications() SQL function; this
  * route just invokes it with the service role and reports how many it wrote.

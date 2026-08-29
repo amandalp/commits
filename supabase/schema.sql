@@ -1,5 +1,5 @@
 -- ============================================================================
---  Commits — database schema
+--  Commits: database schema
 --  Run this in the Supabase SQL editor (or `supabase db push`) once per project.
 --  Safe to re-run: uses IF NOT EXISTS / CREATE OR REPLACE where possible.
 -- ============================================================================
@@ -144,7 +144,7 @@ create table if not exists watches (
 create index if not exists watches_commit_idx on watches(commit_id);
 
 -- ---------------------------------------------------------------------------
---  loop_ins  ("put someone in the loop" — the author CCs a person on a commit)
+--  loop_ins  ("put someone in the loop": the author CCs a person on a commit)
 --  Unlike watches, the *author* creates these rows to tag someone; being
 --  looped in is purely informational (it doesn't make you a watcher).
 -- ---------------------------------------------------------------------------
@@ -194,7 +194,7 @@ create table if not exists updates (
 create index if not exists updates_commit_idx on updates(commit_id, created_at);
 
 -- ---------------------------------------------------------------------------
---  check_ins  (the tracker inside a repeating commit — one row per day)
+--  check_ins  (the tracker inside a repeating commit, one row per day)
 -- ---------------------------------------------------------------------------
 create table if not exists check_ins (
   id         uuid primary key default gen_random_uuid(),
@@ -225,7 +225,7 @@ create table if not exists notifications (
 create index if not exists notifications_user_idx on notifications(user_id, created_at desc);
 
 -- ============================================================================
---  Notification fan-out — SECURITY DEFINER triggers keep this consistent
+--  Notification fan-out: SECURITY DEFINER triggers keep this consistent
 --  without needing permissive insert policies or a service role at runtime.
 -- ============================================================================
 create or replace function notify(
@@ -403,7 +403,7 @@ create trigger on_auth_user_created after insert on auth.users
   for each row execute function handle_new_user();
 
 -- ---------------------------------------------------------------------------
---  Deadline nudges — call from pg_cron / a scheduled route (hourly).
+--  Deadline nudges: call from pg_cron / a scheduled route (hourly).
 --  Prompts the creator "how's it going?" twice per commit:
 --    · ~12h BEFORE the deadline (the run-up)
 --    · ~12h AFTER  the deadline, if still unresolved (the gentle "did you do it?")

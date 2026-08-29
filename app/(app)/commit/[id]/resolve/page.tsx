@@ -59,8 +59,8 @@ export default async function ResolvePage({
 
         {/*
           A big move gets the two answers its shape allows: I did it, or not
-          yet. An everyday commitment ends on purpose instead — close it out,
-          run it again, or turn it into something longer — so a week of
+          yet. An everyday commitment ends on purpose instead: close it out,
+          run it again, or turn it into something longer, so a week of
           sunscreen never quietly becomes a permanent habit tracker.
         */}
         <div className="mt-6 space-y-3">
@@ -104,7 +104,7 @@ export default async function ResolvePage({
                 {tracked ? "Make it something longer" : "Not yet"}
               </span>
               <span className="block text-[14px] text-muted">
-                {tracked ? "pick a new end date — or let it go" : "Need more time"}
+                {tracked ? "pick a new end date, or let it go" : "Need more time"}
               </span>
             </span>
           </Link>

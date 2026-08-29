@@ -7,9 +7,12 @@ import type { CommitView } from "@/lib/types";
 export function Feed({
   commits,
   emptyTab,
+  isGuest,
 }: {
   commits: CommitView[];
   emptyTab: "for-you" | "following";
+  /** Guests compose at /start, which asks for an account only at the end. */
+  isGuest?: boolean;
 }) {
   if (commits.length === 0) {
     return emptyTab === "following" ? (
@@ -29,7 +32,7 @@ export function Feed({
         title="Nothing here yet"
         body="Be the first to put something on the record."
         action={
-          <Link href="/commit/new">
+          <Link href={isGuest ? "/start" : "/commit/new"}>
             <Button>Make a Commit</Button>
           </Link>
         }

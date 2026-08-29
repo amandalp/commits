@@ -10,11 +10,12 @@ import { MentionText } from "./MentionText";
 import { useMentions, MentionMenu } from "./mentions";
 import { cn, timeAgo, compact } from "@/lib/utils";
 import { addComment, toggleCommentLike } from "@/lib/actions/social";
-import type { CommentView, UpdateView, Person } from "@/lib/types";
+import { useAuthGate } from "./AuthGate";
+import type { CommentView, UpdateView } from "@/lib/types";
 
 /**
  * One promise, one evolving conversation. Creator updates, the shipped
- * outcome, and everyone's replies live in a single chronological thread —
+ * outcome, and everyone's replies live in a single chronological thread,
  * no separate "updates" vs "support" systems.
  */
 type ThreadItem =
@@ -23,14 +24,12 @@ type ThreadItem =
 
 export function Conversation({
   commitId,
-  viewer,
   comments,
   updates,
   ship,
   authorId,
 }: {
   commitId: string;
-  viewer: Person | null;
   comments: CommentView[];
   updates: UpdateView[];
   ship: UpdateView | null;
@@ -55,13 +54,11 @@ export function Conversation({
 
   return (
     <section id="conversation">
-      {viewer && (
-        <Composer
-          commitId={commitId}
-          placeholder="say something…"
-          onPosted={() => router.refresh()}
-        />
-      )}
+      <Composer
+        commitId={commitId}
+        placeholder="say something…"
+        onPosted={() => router.refresh()}
+      />
 
       <div className="mt-5 space-y-5">
         {items.length === 0 ? (
@@ -77,7 +74,6 @@ export function Conversation({
                 key={item.key}
                 comment={item.comment}
                 commitId={commitId}
-                viewer={viewer}
                 onChange={() => router.refresh()}
               />
             )
@@ -88,7 +84,7 @@ export function Conversation({
   );
 }
 
-/** A creator post in the thread — a progress update, or the shipped outcome. */
+/** A creator post in the thread: a progress update, or the shipped outcome. */
 function UpdateItem({ update, isAuthor }: { update: UpdateView; isAuthor: boolean }) {
   const shipped = update.kind === "ship";
   const label =
@@ -139,22 +135,21 @@ function UpdateItem({ update, isAuthor }: { update: UpdateView; isAuthor: boolea
 function CommentItem({
   comment,
   commitId,
-  viewer,
   onChange,
   isReply,
 }: {
   comment: CommentView;
   commitId: string;
-  viewer: Person | null;
   onChange: () => void;
   isReply?: boolean;
 }) {
+  const gate = useAuthGate();
   const [liked, setLiked] = useState(comment.viewer_liked);
   const [likes, setLikes] = useState(comment.like_count);
   const [replying, setReplying] = useState(false);
 
   function like() {
-    if (!viewer) return;
+    if (!gate.require({ kind: "like", commentId: comment.id, commitId })) return;
     const next = !liked;
     setLiked(next);
     setLikes((n) => n + (next ? 1 : -1));
@@ -191,7 +186,6 @@ function CommentItem({
         <div className="mt-1 flex items-center gap-4 pl-1.5">
           <button
             onClick={like}
-            disabled={!viewer}
             className={cn(
               "flex items-center gap-1 text-[12.5px] font-medium transition",
               liked ? "text-[#d1477a]" : "text-muted hover:text-ink"
@@ -203,7 +197,7 @@ function CommentItem({
             />
             {likes > 0 && compact(likes)}
           </button>
-          {!isReply && viewer && (
+          {!isReply && (
             <button
               onClick={() => setReplying((v) => !v)}
               className="text-[12.5px] font-medium text-muted hover:text-ink"
@@ -213,7 +207,7 @@ function CommentItem({
           )}
         </div>
 
-        {replying && viewer && (
+        {replying && (
           <div className="mt-2">
             <Composer
               commitId={commitId}
@@ -234,7 +228,6 @@ function CommentItem({
                 key={r.id}
                 comment={r}
                 commitId={commitId}
-                viewer={viewer}
                 onChange={onChange}
                 isReply
               />
@@ -257,6 +250,7 @@ function Composer({
   placeholder?: string;
   onPosted: () => void;
 }) {
+  const gate = useAuthGate();
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
@@ -264,6 +258,9 @@ function Composer({
 
   async function submit() {
     if (!text.trim() || pending) return;
+    // A guest keeps what they typed: the draft rides through signup and posts
+    // itself on the way back.
+    if (!gate.require({ kind: "comment", commitId, text, parentCommentId })) return;
     setPending(true);
     const res = await addComment(commitId, text, parentCommentId ?? null);
     setPending(false);

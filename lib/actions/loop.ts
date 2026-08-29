@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser, type ActionResult } from "./helpers";
+import { optionalUser, requireUser, type ActionResult } from "./helpers";
 import type { Person } from "@/lib/types";
 
 const PERSON = "id, name, username, avatar_url";
@@ -25,17 +25,20 @@ function escapeLike(q: string): string {
  * Excludes the viewer themselves. Profiles are world-readable.
  */
 export async function searchPeople(query: string): Promise<Person[]> {
-  const { supabase, userId } = await requireUser();
+  // Guests can reach this while drafting a comment they haven't signed in to
+  // post yet; profiles are world-readable either way.
+  const { supabase, userId } = await optionalUser();
   const q = query.trim();
   if (!q) return [];
 
   const like = `%${escapeLike(q)}%`;
-  const { data } = await supabase
+  let search = supabase
     .from("profiles")
     .select(PERSON)
     .or(`name.ilike.${like},username.ilike.${like}`)
-    .neq("id", userId)
     .limit(20);
+  if (userId) search = search.neq("id", userId);
+  const { data } = await search;
 
   return (data ?? []).map((p) => personFrom(p as Record<string, unknown>));
 }
@@ -45,7 +48,8 @@ export async function searchPeople(query: string): Promise<Person[]> {
  * first. Falls back to nothing rather than surfacing strangers.
  */
 export async function getSuggestedPeople(): Promise<Person[]> {
-  const { supabase, userId } = await requireUser();
+  const { supabase, userId } = await optionalUser();
+  if (!userId) return [];
   const { data: rows } = await supabase
     .from("follows")
     .select("following_id, created_at")

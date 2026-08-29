@@ -51,7 +51,7 @@ export function HandwrittenCard({
         </div>
       </div>
 
-      {/* the promise — identical treatment to the feed and commit pages */}
+      {/* the promise: identical treatment to the feed and commit pages */}
       <div className="mt-4">
         <CommitStructure text={text} deadline={deadline} duration={duration} size="md" />
       </div>

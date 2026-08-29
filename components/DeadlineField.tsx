@@ -37,7 +37,7 @@ function addMonths(base: Date, months: number): Date {
   return d;
 }
 
-/** Local "YYYY-MM-DDTHH:mm" — the value shape date/time inputs and the parent use. */
+/** Local "YYYY-MM-DDTHH:mm": the value shape date/time inputs and the parent use. */
 export function toLocalInput(d: Date): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(
@@ -47,7 +47,7 @@ export function toLocalInput(d: Date): string {
 
 /**
  * The intelligent default: tomorrow at 6:00 PM. Deadlines should feel
- * intentional — "tomorrow evening" reads as a choice, where the current
+ * intentional. "Tomorrow evening" reads as a choice, where the current
  * clock time (8:34 AM) reads as an accident.
  */
 export function defaultDeadline(): string {
@@ -66,7 +66,7 @@ function dayLabel(d: Date): string {
   return d.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    // A long commitment can land in another year — say so rather than
+    // A long commitment can land in another year, so say so rather than
     // showing a bare "Aug 22" two years out.
     ...(d.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
   });
@@ -98,7 +98,7 @@ function presets(): { label: string; date: Date }[] {
 }
 
 // ---------------------------------------------------------------------------
-// Natural-language parsing — a convenience, never the only way in.
+// Natural-language parsing: a convenience, never the only way in.
 // "launch the landing page by Friday at noon" → deadline of next Friday 12 PM.
 // ---------------------------------------------------------------------------
 
@@ -174,7 +174,7 @@ export function parseNaturalDeadline(phrase: string): Date | null {
 }
 
 // ---------------------------------------------------------------------------
-// Durations — "for 30 days" as an alternative framing of the same deadline.
+// Durations: "for 30 days" as an alternative framing of the same deadline.
 // ---------------------------------------------------------------------------
 
 export const DURATION_UNITS: DurationUnit[] = [
@@ -188,7 +188,7 @@ export const DURATION_UNITS: DurationUnit[] = [
 /** The default when someone switches to a duration: 30 days. */
 export const defaultDuration: Duration = { amount: 30, unit: "days" };
 
-/** Quick picks per unit — the counts people actually commit to. */
+/** Quick picks per unit: the counts people actually commit to. */
 const DURATION_PRESETS: Record<DurationUnit, number[]> = {
   hours: [6, 12, 24, 48, 72],
   days: [7, 14, 21, 30, 60, 90],
@@ -219,7 +219,7 @@ export function durationDeadline(duration: Duration, timePart = "18:00"): string
   const { amount, unit } = clampDuration(duration);
   const now = new Date();
 
-  // Hours run from this moment — "for 12 hours" at 3:20 PM is up at 3:20 AM,
+  // Hours run from this moment. "For 12 hours" at 3:20 PM is up at 3:20 AM,
   // not at some canonical evening hour.
   if (unit === "hours") {
     const end = new Date(now.getTime() + amount * 3600e3);
@@ -241,7 +241,7 @@ export function durationDeadline(duration: Duration, timePart = "18:00"): string
 
 /**
  * Parse a trailing "for 30 days" the same way `parseNaturalDeadline` handles
- * "by Friday" — a convenience for people who type the whole sentence.
+ * "by Friday": a convenience for people who type the whole sentence.
  */
 export function parseNaturalDuration(phrase: string): Duration | null {
   const m = phrase
@@ -300,7 +300,7 @@ export function DeadlineField({
   const byDuration = !!duration;
   const showDuration = duration ?? defaultDuration;
 
-  /** Move to the duration framing (or edit it) — the deadline follows from it. */
+  /** Move to the duration framing (or edit it). The deadline follows from it. */
   function pickDuration(next: Duration) {
     const clamped = clampDuration(next);
     onDurationChange?.(clamped);
@@ -423,7 +423,7 @@ export function DeadlineField({
         </button>
       </Sheet>
 
-      {/* Custom calendar — replaces the native date input entirely. */}
+      {/* Custom calendar: replaces the native date input entirely. */}
       <Sheet
         open={sheet === "date"}
         onClose={() => setSheet(null)}
@@ -438,7 +438,7 @@ export function DeadlineField({
         />
       </Sheet>
 
-      {/* Custom time picker — replaces the ugly native time spinner. */}
+      {/* Custom time picker: replaces the ugly native time spinner. */}
       <Sheet
         open={sheet === "time"}
         onClose={() => setSheet(null)}
@@ -451,7 +451,7 @@ export function DeadlineField({
         />
       </Sheet>
 
-      {/* How many — quick counts for the chosen unit, plus a stepper. */}
+      {/* How many: quick counts for the chosen unit, plus a stepper. */}
       <Sheet
         open={sheet === "amount"}
         onClose={() => setSheet(null)}
@@ -507,7 +507,7 @@ export function DeadlineField({
 }
 
 // ---------------------------------------------------------------------------
-// Amount picker — quick chips for the usual counts, and a field to type any
+// Amount picker: quick chips for the usual counts, and a field to type any
 // other number straight in.
 // ---------------------------------------------------------------------------
 
@@ -521,7 +521,7 @@ function AmountPicker({
   onDone: () => void;
 }) {
   const { amount, unit } = duration;
-  // While someone is typing, the field shows exactly what they typed — the
+  // While someone is typing, the field shows exactly what they typed, so the
   // committed (clamped) amount takes back over on blur or on a chip tap.
   const [typed, setTyped] = useState<string | null>(null);
 
@@ -727,7 +727,7 @@ function CalendarPicker({
 }
 
 // ---------------------------------------------------------------------------
-// Time picker — quick chips + a tidy custom stepper. No native controls.
+// Time picker: quick chips + a tidy custom stepper. No native controls.
 // ---------------------------------------------------------------------------
 
 const TIME_CHIPS: { label: string; hour: number; min: number }[] = [

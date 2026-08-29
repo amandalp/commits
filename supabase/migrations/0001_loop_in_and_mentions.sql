@@ -10,11 +10,11 @@
 --  value can't be used in the same transaction it's created in), then STEP 2.
 -- ============================================================================
 
--- STEP 1 — new notification kinds ------------------------------------------
+-- STEP 1: new notification kinds ------------------------------------------
 alter type notification_type add value if not exists 'loop_in';
 alter type notification_type add value if not exists 'mention';
 
--- STEP 2 — table, trigger, RLS, mention fan-out -----------------------------
+-- STEP 2: table, trigger, RLS, mention fan-out -----------------------------
 
 -- loop_ins: the author CCs a person on a commit ("put someone in the loop").
 create table if not exists loop_ins (

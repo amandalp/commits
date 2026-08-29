@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser, type ActionResult } from "./helpers";
+import { optionalUser, AUTH_REQUIRED, type ActionResult } from "./helpers";
 import type { Person, PersonWithFollow } from "@/lib/types";
 
 /**
@@ -14,7 +14,7 @@ export async function getFollowList(
   userId: string,
   direction: "followers" | "following"
 ): Promise<PersonWithFollow[]> {
-  const { supabase, userId: viewerId } = await requireUser();
+  const { supabase, userId: viewerId } = await optionalUser();
 
   const selectCol = direction === "followers" ? "follower_id" : "following_id";
   const matchCol = direction === "followers" ? "following_id" : "follower_id";
@@ -30,7 +30,14 @@ export async function getFollowList(
 
   const [{ data: profs }, { data: viewerFollows }] = await Promise.all([
     supabase.from("profiles").select("id, name, username, avatar_url, bio").in("id", ids),
-    supabase.from("follows").select("following_id").eq("follower_id", viewerId).in("following_id", ids),
+    // A guest follows nobody, so skip the round-trip entirely.
+    viewerId
+      ? supabase
+          .from("follows")
+          .select("following_id")
+          .eq("follower_id", viewerId)
+          .in("following_id", ids)
+      : Promise.resolve({ data: [] as { following_id: string }[] }),
   ]);
 
   const followedByViewer = new Set(
@@ -59,7 +66,7 @@ export async function getFollowList(
 
 /** Everyone who cheered a commit, most recent first. */
 export async function getCheerers(commitId: string): Promise<Person[]> {
-  const { supabase } = await requireUser();
+  const { supabase } = await optionalUser();
   const { data: rows } = await supabase
     .from("cheers")
     .select("user_id, created_at")
@@ -91,7 +98,8 @@ export async function getCheerers(commitId: string): Promise<Person[]> {
 export async function toggleCheer(
   commitId: string
 ): Promise<ActionResult<{ cheered: boolean }>> {
-  const { supabase, userId } = await requireUser();
+  const { supabase, userId } = await optionalUser();
+  if (!userId) return { ok: false, error: AUTH_REQUIRED };
   const { data: existing } = await supabase
     .from("cheers")
     .select("id")
@@ -113,7 +121,8 @@ export async function toggleCheer(
 export async function toggleWatch(
   commitId: string
 ): Promise<ActionResult<{ watching: boolean }>> {
-  const { supabase, userId } = await requireUser();
+  const { supabase, userId } = await optionalUser();
+  if (!userId) return { ok: false, error: AUTH_REQUIRED };
   const { data: existing } = await supabase
     .from("watches")
     .select("id")
@@ -135,7 +144,8 @@ export async function toggleWatch(
 export async function toggleFollow(
   targetId: string
 ): Promise<ActionResult<{ following: boolean }>> {
-  const { supabase, userId } = await requireUser();
+  const { supabase, userId } = await optionalUser();
+  if (!userId) return { ok: false, error: AUTH_REQUIRED };
   if (targetId === userId)
     return { ok: false, error: "You can't follow yourself." };
 
@@ -166,7 +176,8 @@ export async function addComment(
   text: string,
   parentCommentId?: string | null
 ): Promise<ActionResult<{ id: string }>> {
-  const { supabase, userId } = await requireUser();
+  const { supabase, userId } = await optionalUser();
+  if (!userId) return { ok: false, error: AUTH_REQUIRED };
   const clean = text.trim();
   if (!clean) return { ok: false, error: "Write something first." };
   if (clean.length > 1000) return { ok: false, error: "That comment is too long." };
@@ -191,7 +202,8 @@ export async function toggleCommentLike(
   commentId: string,
   commitId: string
 ): Promise<ActionResult<{ liked: boolean }>> {
-  const { supabase, userId } = await requireUser();
+  const { supabase, userId } = await optionalUser();
+  if (!userId) return { ok: false, error: AUTH_REQUIRED };
   const { data: existing } = await supabase
     .from("comment_likes")
     .select("comment_id")

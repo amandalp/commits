@@ -11,12 +11,12 @@ import { OPEN_FILTER_COOKIE, type OpenFilter } from "@/lib/prefs";
  *   All · Big moves · Everyday
  *
  * A long run of big moves buries the everyday ones, so there has to be a way
- * through — but this is a preference, not navigation. Plain words, a thin
+ * through, but this is a preference, not navigation. Plain words, a thin
  * underline under the chosen one, no pills and no counts. It sits only under
  * Open (Done has its own two groupings) and only appears when both kinds are
  * actually on the list; with one kind there is nothing to choose between.
  *
- * Narrowing to one kind drops that section's header — the choice above already
+ * Narrowing to one kind drops that section's header, since the choice above already
  * says which list you're looking at.
  *
  * The choice is remembered in a cookie rather than localStorage so the server
@@ -31,7 +31,7 @@ export function OpenList({
 }: {
   /** The remembered choice, read from the cookie on the server. */
   initial: OpenFilter;
-  /** Already-rendered rows or cards — this component only decides what shows. */
+  /** Already-rendered rows or cards. This component only decides what shows. */
   bigMoves: React.ReactNode;
   everyday: React.ReactNode;
   hasBigMoves: boolean;
@@ -40,7 +40,7 @@ export function OpenList({
   const [stored, setStored] = useState<OpenFilter>(initial);
 
   // Nothing to choose between until both kinds are on the list. The remembered
-  // choice is kept, just not acted on — it comes back when the other kind does.
+  // choice is kept, just not acted on, and it comes back when the other kind does.
   const choosable = hasBigMoves && hasEveryday;
   const choice: OpenFilter = choosable ? stored : "all";
 

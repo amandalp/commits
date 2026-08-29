@@ -13,7 +13,7 @@ export async function getCheckIns(commitId: string): Promise<CheckIn[]> {
   return (data ?? []).map((r) => ({ day: r.day, status: r.status }));
 }
 
-/** Check-in counts for a set of commits — used for compact progress lines. */
+/** Check-in counts for a set of commits, used for compact progress lines. */
 export async function getCheckInCounts(
   commitIds: string[]
 ): Promise<Map<string, number>> {

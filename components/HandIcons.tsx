@@ -1,7 +1,7 @@
 /**
  * Loosely hand-drawn action icons for the handwritten theme. Drawn as a single
  * continuous marker stroke with round caps and a little overshoot where the
- * line crosses back over itself — so they read like quick sketches next to the
+ * line crosses back over itself, so they read like quick sketches next to the
  * script type. Color is inherited via currentColor, like lucide icons.
  */
 
@@ -53,7 +53,7 @@ export function HandComment({
   );
 }
 
-/** A loosely sketched paper aeroplane — the "send / share" mark. */
+/** A loosely sketched paper aeroplane: the "send / share" mark. */
 export function HandShare({
   className,
   strokeWidth = 2.1,

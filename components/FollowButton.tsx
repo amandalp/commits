@@ -3,20 +3,26 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { toggleFollow } from "@/lib/actions/social";
+import { useAuthGate } from "./AuthGate";
 
 export function FollowButton({
   targetId,
   initialFollowing,
   size = "md",
+  name,
 }: {
   targetId: string;
   initialFollowing: boolean;
   size?: "sm" | "md";
+  /** Only used to word the sign-in prompt a guest sees. */
+  name?: string;
 }) {
+  const gate = useAuthGate();
   const [following, setFollowing] = useState(initialFollowing);
   const [hover, setHover] = useState(false);
 
   function onClick() {
+    if (!gate.require({ kind: "follow", userId: targetId, who: name })) return;
     const next = !following;
     setFollowing(next);
     toggleFollow(targetId).then((r) => {
